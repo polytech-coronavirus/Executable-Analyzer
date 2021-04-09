@@ -5,6 +5,11 @@
 #include <iostream>
 #include <thread>
 #include <utility>
+#include <iterator>
+#include <vector>
+#include <iomanip>
+
+#include "digestpp.hpp"
 
 void foxWorker(FoxUI* &interf)
 {
@@ -15,7 +20,6 @@ void foxWorker(FoxUI* &interf)
   {
     //create parser object
     //TODO create abstract parser class (to set specific parser)
-    ExeParser parser(file);
 
     if (!file.is_open())
     {
@@ -27,6 +31,10 @@ void foxWorker(FoxUI* &interf)
 
     //executable analyzation here
     //TODO separate to threads
+    std::vector<unsigned char> contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    ExeParser parser(contents);
+
+
     interf->pushField("MD5", parser.GetMD5());
     interf->pushField("SHA256", parser.GetSHA256());
     interf->pushField("SHA512", parser.GetSHA512());
