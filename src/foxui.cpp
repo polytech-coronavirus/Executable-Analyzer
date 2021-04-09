@@ -245,7 +245,7 @@ std::string FoxUI::getFilePath()
     filepath_lock.unlock();
 
 
-    std::this_thread::sleep_for(500ms);
+    std::this_thread::sleep_for(10ms);
   }
   return tempFilePath;
 }

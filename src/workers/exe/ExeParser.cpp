@@ -14,15 +14,18 @@ ExeParser::ExeParser(std::ifstream& stream) :
 
 std::string ExeParser::GetSHA256()
 {
+  this->file.seekg(0, std::ios::beg);
   return "0x" + digestpp::sha256().absorb(this->file).hexdigest();
 }
 
 std::string ExeParser::GetSHA512()
 {
+  this->file.seekg(0, std::ios::beg);
   return "0x" + digestpp::sha512().absorb(this->file).hexdigest();
 }
 
 std::string ExeParser::GetMD5()
 {
+  this->file.seekg(0, std::ios::beg);
   return "0x" + digestpp::md5().absorb(this->file).hexdigest();
 }
