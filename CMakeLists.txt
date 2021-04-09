@@ -3,17 +3,24 @@ cmake_minimum_required(VERSION 3.0)
 project(ExecutableAnalyzer)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-file(GLOB FOXSOURCES "src/*.cpp")
+file(GLOB_RECURSE FOXSOURCES "src/*.cpp")
+file(GLOB_RECURSE FOXSOURCESH "src/*.h")
+file(GLOB_RECURSE FOXSOURCESHPP "src/*.hpp")
+
 file(GLOB IMGUISOURCES "libs/imgui/imgui*.cpp")
 set(FOXSOURCES "${FOXSOURCES};${PROJECT_SOURCE_DIR}/libs/imgui/backends/imgui_impl_opengl2.cpp")
 set(FOXSOURCES "${FOXSOURCES};${PROJECT_SOURCE_DIR}/libs/imgui/backends/imgui_impl_glfw.cpp")
 set(FOXSOURCES "${FOXSOURCES};${IMGUISOURCES}")
+set(FOXSOURCES "${FOXSOURCES};${FOXSOURCESH}")
+set(FOXSOURCES "${FOXSOURCES};${FOXSOURCESHPP}")
 
 message("FOXSOURCES contains ${FOXSOURCES}")
 
 include_directories("${PROJECT_SOURCE_DIR}/libs/imgui")
 include_directories("${PROJECT_SOURCE_DIR}/libs/glfw/include")
 include_directories("${PROJECT_SOURCE_DIR}/libs/imgui/backends")
+
+include_directories("${PROJECT_SOURCE_DIR}/libs/digestpp")
 
 #dont build GLFW  docs tests exmaples
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)

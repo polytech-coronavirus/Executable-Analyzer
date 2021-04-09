@@ -9,5 +9,10 @@ if exist build\ (
   echo RUN CONFIGURE FIRST! BUILD FOLDER DOES NOT EXIST
 )
 
-..\build\Debug\ExecutableAnalyzer.exe
+if %errorlevel% == 0 (
+    ..\build\Debug\ExecutableAnalyzer.exe
+    pause
+)
+
+
 pause
