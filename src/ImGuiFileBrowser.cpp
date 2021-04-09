@@ -119,7 +119,7 @@ namespace imgui_addons
         max_size.y = io.DisplaySize.y;
         ImGui::SetNextWindowSizeConstraints(min_size, max_size);
         ImGui::SetNextWindowPos(ImVec2(0,0), ImGuiCond_Appearing);
-        ImGui::SetNextWindowSize(sz_xy, ImGuiCond_Appearing);
+        ImGui::SetNextWindowSize(sz_xy);
 
         //Set Proper Filter Mode.
         if(mode == DialogMode::SELECT)
