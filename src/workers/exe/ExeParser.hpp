@@ -2,16 +2,17 @@
 
 #include <string>
 #include <fstream>
+#include <vector>
 
 class ExeParser
 {
 public:
-  ExeParser(std::ifstream& stream);
+  ExeParser(std::vector<unsigned char>& inputFile);
   ExeParser() = delete;
 
   std::string GetSHA256();
   std::string GetSHA512();
   std::string GetMD5();
 private:
-  std::ifstream& file;
+  std::vector<unsigned char>& binaryData;
 };
