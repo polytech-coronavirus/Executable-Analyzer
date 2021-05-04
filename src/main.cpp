@@ -1,5 +1,5 @@
 #include "foxui.h"
-#include "workers/exe/ExeParser.hpp"
+#include "workers/exe/ElfParser.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -14,25 +14,15 @@
 void foxWorker(FoxUI* &interf)
 {
   std::string filePath = interf->getFilePath();
-  std::ifstream file(filePath, std::ios::in | std::ios::binary);
 
   try
   {
     //create parser object
     //TODO create abstract parser class (to set specific parser)
 
-    if (!file.is_open())
-    {
-      interf->pushError("Couldn't open file");
-      interf->setState(FoxUI::States::ERROR);
-
-      return;
-    }
-
     //executable analyzation here
     //TODO separate to threads
-    std::vector<unsigned char> contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    ExeParser parser(contents);
+    Elf32Parser parser(filePath);
 
 
     interf->pushField("MD5", parser.GetMD5());
@@ -41,9 +31,9 @@ void foxWorker(FoxUI* &interf)
 
     interf->setState(FoxUI::States::DONE);
   }
-  catch (std::runtime_error& error)
+  catch (std::exception& error)
   {
-    interf->pushError("Couldn't open file");
+    interf->pushError(error.what());
     interf->setState(FoxUI::States::ERROR);
   }
 
