@@ -39,8 +39,8 @@ namespace imgui_addons
         is_dir = false;
         filter_dirty = true;
         is_appearing = true;
-        show_files_with_valid_extensions = true;
-        show_all_files = false;
+        show_files_with_valid_extensions = false;
+        show_all_files = true;
 
         col_items_limit = 12;
         selected_idx = -1;
@@ -232,7 +232,7 @@ namespace imgui_addons
 
         ImGui::BeginChild("##NavigationWindow", nw_size, true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
 
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.882f, 0.745f, 0.078f,1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(/*0.882f, 0.745f, 0.078f*/1, 0.662, 0.101,1.0f));
         for(int i = 0; i < current_dirlist.size(); i++)
         {
             if( ImGui::Button(current_dirlist[i].c_str()) )
@@ -264,7 +264,7 @@ namespace imgui_addons
                         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.125f, 0.125f, 0.125f, 1.0f));
                         if(ImGui::ListBoxHeader("##NavBarDropBox", ImVec2(0, list_item_height* 5)))
                         {
-                            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.882f, 0.745f, 0.078f,1.0f));
+                            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.662, 0.101, 1.0f));
                             for(int j = i+1; j < current_dirlist.size(); j++)
                             {
                                 if(ImGui::Selectable(current_dirlist[j].c_str(), false) && j != current_dirlist.size() - 1)
@@ -1119,7 +1119,7 @@ namespace imgui_addons
             // If list of extensions has all types, no need to validate.
             for(auto ext : valid_exts)
             {
-                if(ext == "*.*")
+                if(ext == "*.*" || this->show_all_files)
                     return true;
             }
             size_t idx = selected_fn.find_last_of('.');
