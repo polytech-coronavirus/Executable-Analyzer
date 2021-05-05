@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>
 #include <fstream>
 #include <vector>
@@ -12,10 +11,10 @@ public:
   ExeParser() = delete;
   virtual ~ExeParser() = default;
   
-  virtual std::string getCreationTime() = 0;
-  virtual std::string getLastChangeTime() = 0;
+  std::string getCreationTime();
+  std::string getLastChangeTime();
   virtual std::string getCompilationTime() = 0;
-  virtual std::string getFileSize() = 0;
+  std::string getFileSize();
   virtual std::string getDigitalSignature() = 0;
   virtual std::string getAlternateData() = 0;
   virtual std::string getBitness() = 0;
@@ -28,3 +27,5 @@ public:
 private:
   std::string inputFile;
 };
+
+ExeParser* getParser(const std::string& filename);
