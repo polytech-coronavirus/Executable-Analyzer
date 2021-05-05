@@ -1,5 +1,5 @@
 #include "foxui.h"
-#include "workers/exe/ElfParser.hpp"
+#include "workers/exe/ExeParser.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -22,12 +22,16 @@ void foxWorker(FoxUI* &interf)
 
     //executable analyzation here
     //TODO separate to threads
-    Elf32Parser parser(filePath);
 
+    ExeParser* parser = getParser(filePath);
 
-    interf->pushField("MD5", parser.GetMD5());
-    interf->pushField("SHA256", parser.GetSHA256());
-    interf->pushField("SHA512", parser.GetSHA512());
+    interf->pushField("MD5", parser->GetMD5());
+    interf->pushField("SHA256", parser->GetSHA256());
+    interf->pushField("SHA512", parser->GetSHA512());
+    interf->pushField("Creation Time", parser->getCreationTime());
+    interf->pushField("Last Modification Time", parser->getLastChangeTime());
+    interf->pushField("File Size", parser->getFileSize());
+    interf->pushField("File Type", parser->getFileType());
 
     interf->setState(FoxUI::States::DONE);
   }

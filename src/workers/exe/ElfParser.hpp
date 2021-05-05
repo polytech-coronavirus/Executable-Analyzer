@@ -50,3 +50,24 @@ private:
   Elf32_Ehdr elf_header;
   Elf32_Phdr elf_phdr;
 };
+
+class Elf64Parser : public ExeParser
+{
+public:
+
+  Elf64Parser(std::string inputFile);
+
+  std::string getCreationTime();
+  std::string getLastChangeTime();
+  std::string getCompilationTime();
+  std::string getFileSize();
+  std::string getDigitalSignature();
+  std::string getAlternateData();
+  std::string getBitness();
+  std::string getFileType();
+
+private:
+  Elf32_Ehdr elf_header;
+  Elf32_Phdr elf_phdr;
+};
+
