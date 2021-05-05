@@ -15,6 +15,8 @@
 #include "digestpp.hpp"
 
 #ifndef WIN32
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #endif
 
