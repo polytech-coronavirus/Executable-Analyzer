@@ -77,7 +77,11 @@ ExeParser::ExeParser(std::string inputFile):
 
     HANDLE file = FindFirstStreamW(filename.c_str(), FindStreamInfoStandard, &fileData, reserved);
     if (file == INVALID_HANDLE_VALUE)
-        return;
+    {
+        return "There are no alternate data streams\n";
+    }
+
+    toReturn += "In file: " + inputFile + '\n';
 
     while (FindNextStreamW(file, &streamData))
     {
@@ -89,7 +93,7 @@ ExeParser::ExeParser(std::string inputFile):
         std::string streamSize(size.begin(), size.end());
         counter++;
 
-        toReturn += "Stream ¹" + std::to_string(counter) + '\t' + 
+        toReturn += "Stream N" + std::to_string(counter) + '\t' + 
                     "Stream name: " + streamName + '\t' + 
                     "Stream size: " + streamSize + '\n';
     }
