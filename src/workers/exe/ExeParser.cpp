@@ -69,6 +69,7 @@ ExeParser::ExeParser(std::string inputFile):
     std::string toReturn;
 
 #ifdef _WIN32
+    int counter = 0;
     std::wstring filename(inputFile.begin(), inputFile.end());
     WIN32_FIND_STREAM_DATA fileData, streamData;
     constexpr DWORD reserved = 0;
@@ -86,8 +87,11 @@ ExeParser::ExeParser(std::string inputFile):
 
         std::string streamName(name.begin(), name.end());
         std::string streamSize(size.begin(), size.end());
+        counter++;
 
-        toReturn += "Stream name: " + streamName + '\t' + "Stream size: " + streamSize + '\n';
+        toReturn += "Stream ¹" + std::to_string(counter) + '\t' + 
+                    "Stream name: " + streamName + '\t' + 
+                    "Stream size: " + streamSize + '\n';
     }
 #else
     toReturn += "There are no alternate data stream on this OS\n";
