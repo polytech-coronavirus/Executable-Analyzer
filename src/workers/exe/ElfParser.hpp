@@ -70,4 +70,3 @@ private:
   Elf32_Ehdr elf_header;
   Elf32_Phdr elf_phdr;
 };
-
