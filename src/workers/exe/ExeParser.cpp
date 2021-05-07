@@ -81,8 +81,6 @@ ExeParser::ExeParser(std::string inputFile):
         return "There are no alternate data streams\n";
     }
 
-    toReturn += "In file: " + inputFile + '\n';
-
     while (FindNextStreamW(file, &streamData))
     {
         toReturn += "In file: " + inputFile + '\n';
