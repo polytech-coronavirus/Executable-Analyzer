@@ -2,8 +2,6 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include <Windows.h>
-#include <iostream>
 
 class ExeParser
 {
@@ -21,9 +19,7 @@ public:
   virtual std::string getAlternateData() = 0;
   virtual std::string getBitness() = 0;
   virtual std::string getFileType() = 0;
-
-
-  std::string GetADS();
+  
   std::string GetSHA256();
   std::string GetSHA512();
   std::string GetMD5();
