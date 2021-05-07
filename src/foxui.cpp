@@ -183,6 +183,7 @@ void FoxUI::runUI()
 
     ImGui::End();
   }
+  //ImGui::ShowDemoWindow();
 
   render();
 }
