@@ -27,7 +27,7 @@ public:
   std::string GetSHA512();
   std::string GetMD5();
   
-private:
+protected:
   std::string inputFile;
 };
 
