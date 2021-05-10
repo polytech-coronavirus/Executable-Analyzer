@@ -145,5 +145,5 @@ std::string ElfParser::getCompiler()
     throw std::invalid_argument("ELF_PARSER_ERROR: couldn't open file." + inputFile);
   }
   std::regex gcc("");
-
+  return "";
 }
