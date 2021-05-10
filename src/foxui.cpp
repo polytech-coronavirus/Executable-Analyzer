@@ -157,7 +157,7 @@ void FoxUI::runUI()
       ImGui::TextColored(ImVec4(0.0, 1.0, 0.0, 1.0), "Analyzing %s", selected_file.c_str());
       break;
     case States::DONE:
-      ImGui::TextColored(ImVec4(0.0, 1.0, 0.0, 1.0), "Done\nResults: %s", selected_file.c_str());
+      ImGui::TextColored(ImVec4(0.0, 1.0, 0.0, 1.0), "Done\nResults for %s", selected_file.c_str());
 
       executableFields_lock.lock();
       for (auto element : executableFields)

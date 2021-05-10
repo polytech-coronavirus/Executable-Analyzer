@@ -15,11 +15,12 @@ public:
   std::string getCreationTime();
   std::string getLastChangeTime();
   virtual std::string getCompilationTime() = 0;
+  virtual std::string getCompiler() = 0;
   std::string getFileSize();
   virtual std::string getDigitalSignature() = 0;
-  virtual std::string getAlternateData() = 0;
   virtual std::string getBitness() = 0;
   virtual std::string getFileType() = 0;
+  virtual std::string isUsingGPU() = 0;
 
 
   std::string GetADS();

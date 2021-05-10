@@ -17,9 +17,6 @@ void foxWorker(FoxUI* &interf)
 
   try
   {
-    //create parser object
-    //TODO create abstract parser class (to set specific parser)
-
     //executable analyzation here
     //TODO separate to threads
 
@@ -33,6 +30,16 @@ void foxWorker(FoxUI* &interf)
     interf->pushField("File Size", parser->getFileSize());
     interf->pushField("File Type", parser->getFileType());
 
+    if (parser->getFileType() != "Unknown")
+    {
+      interf->pushField("Bitness", parser->getBitness());
+      interf->pushField("Compiler", parser->getCompiler());
+      interf->pushField("Compile time", parser->getCompilationTime());
+      interf->pushField("Using GPU", parser->isUsingGPU());
+    }
+
+    interf->pushField("Alternative data streams", parser->GetADS());
+
     interf->setState(FoxUI::States::DONE);
   }
   catch (std::exception& error)
@@ -40,14 +47,13 @@ void foxWorker(FoxUI* &interf)
     interf->pushError(error.what());
     interf->setState(FoxUI::States::ERROR);
   }
-
 }
 
 //TODO add terminal mode (argv parsing)
 int main(int, char**)
 {
   //glfw in FoxUI attaches to calling thread, so using pointers
-  FoxUI* interf = new FoxUI(800, 600);
+  FoxUI* interf = new FoxUI(900, 500);
   std::thread uiThread(foxWorker, std::ref(interf));
   uiThread.detach();
 

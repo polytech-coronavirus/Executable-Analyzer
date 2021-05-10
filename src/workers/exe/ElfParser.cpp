@@ -122,11 +122,6 @@ std::string ElfParser::getDigitalSignature()
   return "";
 }
 
-std::string ElfParser::getAlternateData()
-{
-  return "";
-}
-
 std::string ElfParser::getBitness()
 {
   return std::to_string(elf_bitness) + "bit";
@@ -135,6 +130,11 @@ std::string ElfParser::getBitness()
 std::string ElfParser::getFileType()
 {
   return std::string("ELF") + std::to_string(elf_bitness);
+}
+
+std::string ElfParser::isUsingGPU()
+{
+  return "TODO";
 }
 
 std::string ElfParser::getCompiler()

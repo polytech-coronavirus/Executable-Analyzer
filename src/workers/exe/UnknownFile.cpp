@@ -24,3 +24,13 @@ std::string UnknownFile::getFileType()
 {
   return "Unknown";
 }
+
+std::string UnknownFile::isUsingGPU()
+{
+    return "";
+}
+
+std::string UnknownFile::getCompiler()
+{
+  return std::string();
+}
