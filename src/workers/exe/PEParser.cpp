@@ -8,7 +8,7 @@
 #include <iomanip>
 
 //virtual address to file address
-unsigned long Rva2Offset_32(unsigned long rva, PIMAGE_FOX_SECTION_HEADER psh, /*TODO 32*/ PIMAGE_FOX_NT_HEADERS32 pnt)
+unsigned long Rva2Offset_32(unsigned long rva, PIMAGE_FOX_SECTION_HEADER psh, PIMAGE_FOX_NT_HEADERS32 pnt)
 {
   size_t i = 0;
   PIMAGE_FOX_SECTION_HEADER pSeh;
@@ -29,7 +29,7 @@ unsigned long Rva2Offset_32(unsigned long rva, PIMAGE_FOX_SECTION_HEADER psh, /*
   return (rva - pSeh->VirtualAddress + pSeh->PointerToRawData);
 }
 
-unsigned long Rva2Offset_64(unsigned long rva, PIMAGE_FOX_SECTION_HEADER psh, /*TODO 32*/ PIMAGE_FOX_NT_HEADERS64 pnt)
+unsigned long Rva2Offset_64(unsigned long rva, PIMAGE_FOX_SECTION_HEADER psh, PIMAGE_FOX_NT_HEADERS64 pnt)
 {
   size_t i = 0;
   PIMAGE_FOX_SECTION_HEADER pSeh;
@@ -57,7 +57,7 @@ void passImportTable32(void* virtualpointer, std::vector<std::string>& importDll
   PIMAGE_FOX_IMPORT_DESCRIPTOR pImportDescriptor;
   if (ntheaders32->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size != 0)
   {
-    pImportDescriptor = (PIMAGE_FOX_IMPORT_DESCRIPTOR)((unsigned __int64)virtualpointer + \
+    pImportDescriptor = (PIMAGE_FOX_IMPORT_DESCRIPTOR)((unsigned long long)virtualpointer + \
       Rva2Offset_32(ntheaders32->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress, pSech32, ntheaders32));
 
     char* libname[256];
@@ -67,7 +67,7 @@ void passImportTable32(void* virtualpointer, std::vector<std::string>& importDll
     while (pImportDescriptor->Name != NULL)
     {
       //Get the name of each DLL
-      libname[i] = (char*)((unsigned __int64)virtualpointer + Rva2Offset_32(pImportDescriptor->Name, pSech32, ntheaders32));
+      libname[i] = (char*)((unsigned long long)virtualpointer + Rva2Offset_32(pImportDescriptor->Name, pSech32, ntheaders32));
 
       std::string libCompare(libname[i]);
       std::transform(libCompare.begin(), libCompare.end(), libCompare.begin(),
@@ -89,7 +89,7 @@ void passImportTable64(void* virtualpointer, std::vector<std::string>& importDll
 
   if (ntheaders64->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size != 0)
   {
-    pImportDescriptor = (PIMAGE_FOX_IMPORT_DESCRIPTOR)((unsigned __int64)virtualpointer + \
+    pImportDescriptor = (PIMAGE_FOX_IMPORT_DESCRIPTOR)((unsigned long long)virtualpointer + \
       Rva2Offset_64(ntheaders64->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress, pSech64, ntheaders64));
     char* libname[256];
     size_t i = 0;
@@ -97,7 +97,7 @@ void passImportTable64(void* virtualpointer, std::vector<std::string>& importDll
     while (pImportDescriptor->Name != NULL)
     {
       //Get the name of each DLL
-      libname[i] = (char*)((unsigned __int64)virtualpointer + Rva2Offset_64(pImportDescriptor->Name, pSech64, ntheaders64));
+      libname[i] = (char*)((unsigned long long)virtualpointer + Rva2Offset_64(pImportDescriptor->Name, pSech64, ntheaders64));
 
       std::string libCompare(libname[i]);
       std::transform(libCompare.begin(), libCompare.end(), libCompare.begin(),
@@ -216,7 +216,7 @@ std::string PE32::isUsingGPU()
     "d3d[a-z0-9]*\\.dll"
   };
   
-  bool hasMathes = false;
+  bool hasMatches = false;
 
   std::string out("Yes [");
 
@@ -227,7 +227,7 @@ std::string PE32::isUsingGPU()
       std::regex regexfox(importRegex);
       if (std::regex_match(dll, regexfox))
       {
-        hasMathes = true;
+        hasMatches = true;
         out += dll;
         out += ',';
         
@@ -241,7 +241,7 @@ std::string PE32::isUsingGPU()
   }
   out += ']';
 
-  if (hasMathes)
+  if (hasMatches)
   {
     return out;
   }

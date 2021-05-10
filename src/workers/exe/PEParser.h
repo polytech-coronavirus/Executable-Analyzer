@@ -2,11 +2,6 @@
 #include "ExeParser.hpp"
 #include <string>
 
-
-#ifndef _WIN32
-typedef long long __int64;
-#endif
-
 #define IMAGE_DIRECTORY_ENTRY_IMPORT 1
 #define IMAGE_SIZEOF_SHORT_NAME 8
 typedef struct _IMAGE_FOX_SECTION_HEADER
@@ -55,7 +50,7 @@ typedef struct _IMAGE_FOX_OPTIONAL_HEADER64
   unsigned long       SizeOfUninitializedData;
   unsigned long       AddressOfEntryPoint;
   unsigned long       BaseOfCode;
-  unsigned __int64   ImageBase;
+  unsigned long long ImageBase;
   unsigned long       SectionAlignment;
   unsigned long       FileAlignment;
   unsigned short        MajorOperatingSystemVersion;
@@ -70,10 +65,11 @@ typedef struct _IMAGE_FOX_OPTIONAL_HEADER64
   unsigned long       CheckSum;
   unsigned short        Subsystem;
   unsigned short        DllCharacteristics;
-  unsigned __int64   SizeOfStackReserve;
-  unsigned __int64   SizeOfStackCommit;
-  unsigned __int64   SizeOfHeapReserve;
-  unsigned __int64   SizeOfHeapCommit;
+  unsigned long long   SizeOfStackReserve;
+  unsigned long long   SizeOfStackCommit;
+  unsigned long long   SizeOfHeapReserve;
+  unsigned long long   SizeOfHeapCommit;
+
   unsigned long       LoaderFlags;
   unsigned long       NumberOfRvaAndSizes;
   IMAGE_FOX_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
@@ -169,15 +165,16 @@ typedef struct _IMAGE_FOX_IMPORT_DESCRIPTOR
 } IMAGE_FOX_IMPORT_DESCRIPTOR;
 typedef IMAGE_FOX_IMPORT_DESCRIPTOR __unaligned* PIMAGE_FOX_IMPORT_DESCRIPTOR;
 
-#define FIELD_FOX_OFFSET(type, field)    ((long)(__int64*)&(((type *)0)->field))
+
+#define FIELD_FOX_OFFSET(type, field)    ((long)(unsigned long long*)&(((type *)0)->field))
 #define IMAGE_FOX_FIRST_SECTION_32( ntheader ) ((PIMAGE_FOX_SECTION_HEADER)        \
-    ((unsigned __int64)(ntheader) +                                            \
+    ((unsigned unsigned long long)(ntheader) +                                            \
      FIELD_FOX_OFFSET( _IMAGE_FOX_NT_HEADERS32, OptionalHeader ) +                 \
      ((ntheader))->FileHeader.SizeOfOptionalHeader   \
     ))
 
 #define IMAGE_FOX_FIRST_SECTION_64( ntheader ) ((PIMAGE_FOX_SECTION_HEADER)        \
-    ((unsigned __int64)(ntheader) +                                            \
+    ((unsigned unsigned long long)(ntheader) +                                            \
      FIELD_FOX_OFFSET( _IMAGE_FOX_NT_HEADERS64, OptionalHeader ) +                 \
      ((ntheader))->FileHeader.SizeOfOptionalHeader   \
     ))
