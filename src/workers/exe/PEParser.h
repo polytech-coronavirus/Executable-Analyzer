@@ -167,13 +167,13 @@ typedef struct _IMAGE_FOX_IMPORT_DESCRIPTOR
 
 #define FIELD_FOX_OFFSET(type, field)    ((long)(unsigned long long*)&(((type *)0)->field))
 #define IMAGE_FOX_FIRST_SECTION_32( ntheader ) ((PIMAGE_FOX_SECTION_HEADER)        \
-    ((unsigned unsigned long long)(ntheader) +                                            \
+    ((unsigned long long)(ntheader) +                                            \
      FIELD_FOX_OFFSET( _IMAGE_FOX_NT_HEADERS32, OptionalHeader ) +                 \
      ((ntheader))->FileHeader.SizeOfOptionalHeader   \
     ))
 
 #define IMAGE_FOX_FIRST_SECTION_64( ntheader ) ((PIMAGE_FOX_SECTION_HEADER)        \
-    ((unsigned unsigned long long)(ntheader) +                                            \
+    ((unsigned long long)(ntheader) +                                            \
      FIELD_FOX_OFFSET( _IMAGE_FOX_NT_HEADERS64, OptionalHeader ) +                 \
      ((ntheader))->FileHeader.SizeOfOptionalHeader   \
     ))
