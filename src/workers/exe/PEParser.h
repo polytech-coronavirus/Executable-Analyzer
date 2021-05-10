@@ -2,6 +2,11 @@
 #include "ExeParser.hpp"
 #include <string>
 
+
+#ifndef _WIN32
+typedef long long __int64;
+#endif
+
 #define IMAGE_DIRECTORY_ENTRY_IMPORT 1
 #define IMAGE_SIZEOF_SHORT_NAME 8
 typedef struct _IMAGE_FOX_SECTION_HEADER
@@ -20,7 +25,7 @@ typedef struct _IMAGE_FOX_SECTION_HEADER
   unsigned short    NumberOfRelocations;
   unsigned short    NumberOfLinenumbers;
   unsigned long   Characteristics;
-} IMAGE_FOX_SECTION_HEADER, * PIMAGE_FOX_SECTION_HEADER;
+} IMAGE_FOX_SECTION_HEADER, *PIMAGE_FOX_SECTION_HEADER;
 
 typedef struct _IMAGE_FOX_FILE_HEADER
 {
@@ -31,7 +36,7 @@ typedef struct _IMAGE_FOX_FILE_HEADER
   unsigned long   NumberOfSymbols;
   unsigned short    SizeOfOptionalHeader;
   unsigned short    Characteristics;
-} IMAGE_FOX_FILE_HEADER, * PIMAGE_FOX_FILE_HEADER;
+} IMAGE_FOX_FILE_HEADER, *PIMAGE_FOX_FILE_HEADER;
 
 typedef struct _IMAGE_FOX_DATA_DIRECTORY
 {
