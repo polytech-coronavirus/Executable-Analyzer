@@ -108,21 +108,21 @@ typedef struct _IMAGE_FOX_OPTIONAL_HEADER32
   unsigned long                LoaderFlags;
   unsigned long                NumberOfRvaAndSizes;
   IMAGE_FOX_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
-} IMAGE_FOX_OPTIONAL_HEADER32, * PIMAGE_FOX_OPTIONAL_HEADER32;
+} IMAGE_FOX_OPTIONAL_HEADER32, *PIMAGE_FOX_OPTIONAL_HEADER32;
 
 typedef struct _IMAGE_FOX_NT_HEADERS64
 {
   unsigned long Signature;
   IMAGE_FOX_FILE_HEADER FileHeader;
   IMAGE_FOX_OPTIONAL_HEADER64 OptionalHeader;
-} IMAGE_FOX_NT_HEADERS64, * PIMAGE_FOX_NT_HEADERS64;
+} IMAGE_FOX_NT_HEADERS64, *PIMAGE_FOX_NT_HEADERS64;
 
 typedef struct _IMAGE_FOX_NT_HEADERS32
 {
   unsigned long Signature;
   IMAGE_FOX_FILE_HEADER FileHeader;
   IMAGE_FOX_OPTIONAL_HEADER32 OptionalHeader;
-} IMAGE_FOX_NT_HEADERS32, * PIMAGE_FOX_NT_HEADERS32;
+} IMAGE_FOX_NT_HEADERS32, *PIMAGE_FOX_NT_HEADERS32;
 
 typedef struct _IMAGE_FOX_DOS_HEADER
 {      // DOS .EXE header
@@ -145,7 +145,7 @@ typedef struct _IMAGE_FOX_DOS_HEADER
   unsigned short   e_oeminfo;                   // OEM information; e_oemid specific
   unsigned short   e_res2[10];                  // Reserved words
   long   e_lfanew;                    // File address of new exe header
-} IMAGE_FOX_DOS_HEADER, * PIMAGE_FOX_DOS_HEADER;
+} IMAGE_FOX_DOS_HEADER, *PIMAGE_FOX_DOS_HEADER;
 
 typedef struct _IMAGE_FOX_IMPORT_DESCRIPTOR
 {
@@ -162,8 +162,7 @@ typedef struct _IMAGE_FOX_IMPORT_DESCRIPTOR
   unsigned long   ForwarderChain;                 // -1 if no forwarders
   unsigned long   Name;
   unsigned long   FirstThunk;                     // RVA to IAT (if bound this IAT has actual addresses)
-} IMAGE_FOX_IMPORT_DESCRIPTOR;
-typedef IMAGE_FOX_IMPORT_DESCRIPTOR __unaligned* PIMAGE_FOX_IMPORT_DESCRIPTOR;
+} IMAGE_FOX_IMPORT_DESCRIPTOR, *PIMAGE_FOX_IMPORT_DESCRIPTOR;
 
 
 #define FIELD_FOX_OFFSET(type, field)    ((long)(unsigned long long*)&(((type *)0)->field))
