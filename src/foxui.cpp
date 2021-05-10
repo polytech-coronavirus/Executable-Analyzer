@@ -125,7 +125,7 @@ void FoxUI::runUI()
         file_dialog_open = false;
       }
       ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
-      if (file_test.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(windowWidth, windowHeight), ".exe,.sh,.out"))
+      if (file_test.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(windowWidth, windowHeight), ".exe,.out"))
       {
         selected_file = file_test.selected_path;
 
@@ -160,10 +160,26 @@ void FoxUI::runUI()
       ImGui::TextColored(ImVec4(0.0, 1.0, 0.0, 1.0), "Done\nResults for %s", selected_file.c_str());
 
       executableFields_lock.lock();
-      for (auto element : executableFields)
+
+      if (ImGui::BeginTable("fields_fox", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoSavedSettings))
       {
-        ImGui::TextColored(ImVec4(1.0, 1.0, 1.0, 1.0), "%s : %s", element.first.c_str(), element.second.c_str());
+        /*ImGui::TableSetupColumn("fox1", 0, 50);
+        ImGui::TableSetupColumn("fox2", 0, 300);*/
+        //ImGui::SetColumnWidth(0, 10);
+        //ImGui::SetColumnWidth(1, 50);
+        for (auto element : executableFields)
+        {
+          
+          ImGui::TableNextColumn();
+          ImGui::TextColored(ImVec4(0.945, 0.490, 0.054, 1.0f), "%s", element.first.c_str());
+
+          ImGui::TableNextColumn();
+          ImGui::TextColored(ImVec4(1.0, 1.0, 1.0, 1.0), "%s", element.second.c_str());
+        }
+        ImGui::EndTable();
       }
+      
+      
       executableFields_lock.unlock();
       break;
 

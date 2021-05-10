@@ -122,6 +122,12 @@ PE32::PE32(std::string inputFile) : ExeParser(inputFile), bitness(0), compileTim
   void* virtualpointer = new unsigned char[length];
   file.read((char*)virtualpointer, length);
 
+  auto size1 = sizeof(long);
+  auto size2 = sizeof(unsigned long);
+  auto size3 = sizeof(unsigned short);
+  auto size4 = sizeof(unsigned long long);
+  auto size5 = sizeof(unsigned char);
+
   auto bitraw = *(unsigned short*)((unsigned char*)virtualpointer + PIMAGE_FOX_DOS_HEADER(virtualpointer)->e_lfanew + sizeof(unsigned long) + sizeof(IMAGE_FOX_FILE_HEADER));
   if (bitraw == 0x10b)
   {
