@@ -43,14 +43,14 @@ ExeParser* getParser(const std::string& filename)
     char arr[20] = { 0 };
 
     file.read(arr, 5);
-
+    file.close();
     if (arr[0] == 'M' && arr[1] == 'Z')
     {
       return new PE32(filename);
     }
     else if (arr[0] == 0x7F && arr[1] == 'E' && arr[2] == 'L' && arr[3] == 'F')
     {
-      return new Elf32Parser(filename);
+      return new ElfParser(filename);
     }
     else
     {
@@ -64,7 +64,7 @@ ExeParser::ExeParser(std::string inputFile):
 {}
 
 
-    std::string ExeParser::GetADS()
+std::string ExeParser::GetADS()
 {
     std::string toReturn;
 
