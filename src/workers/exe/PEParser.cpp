@@ -57,7 +57,7 @@ void passImportTable32(void* virtualpointer, std::vector<std::string>& importDll
   PIMAGE_FOX_IMPORT_DESCRIPTOR pImportDescriptor;
   if (ntheaders32->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size != 0)
   {
-    pImportDescriptor = (PIMAGE_FOX_IMPORT_DESCRIPTOR)((unsigned long long)virtualpointer + \
+    pImportDescriptor = (PIMAGE_FOX_IMPORT_DESCRIPTOR)((uint64_t)virtualpointer + \
       Rva2Offset_32(ntheaders32->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress, pSech32, ntheaders32));
 
     char* libname[256];
@@ -67,7 +67,7 @@ void passImportTable32(void* virtualpointer, std::vector<std::string>& importDll
     while (pImportDescriptor->Name != NULL)
     {
       //Get the name of each DLL
-      libname[i] = (char*)((unsigned long long)virtualpointer + Rva2Offset_32(pImportDescriptor->Name, pSech32, ntheaders32));
+      libname[i] = (char*)((uint64_t)virtualpointer + Rva2Offset_32(pImportDescriptor->Name, pSech32, ntheaders32));
 
       std::string libCompare(libname[i]);
       std::transform(libCompare.begin(), libCompare.end(), libCompare.begin(),
@@ -89,7 +89,7 @@ void passImportTable64(void* virtualpointer, std::vector<std::string>& importDll
 
   if (ntheaders64->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size != 0)
   {
-    pImportDescriptor = (PIMAGE_FOX_IMPORT_DESCRIPTOR)((unsigned long long)virtualpointer + \
+    pImportDescriptor = (PIMAGE_FOX_IMPORT_DESCRIPTOR)((uint64_t)virtualpointer + \
       Rva2Offset_64(ntheaders64->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress, pSech64, ntheaders64));
     char* libname[256];
     size_t i = 0;
@@ -97,7 +97,7 @@ void passImportTable64(void* virtualpointer, std::vector<std::string>& importDll
     while (pImportDescriptor->Name != NULL)
     {
       //Get the name of each DLL
-      libname[i] = (char*)((unsigned long long)virtualpointer + Rva2Offset_64(pImportDescriptor->Name, pSech64, ntheaders64));
+      libname[i] = (char*)((uint64_t)virtualpointer + Rva2Offset_64(pImportDescriptor->Name, pSech64, ntheaders64));
 
       std::string libCompare(libname[i]);
       std::transform(libCompare.begin(), libCompare.end(), libCompare.begin(),
@@ -122,13 +122,7 @@ PE32::PE32(std::string inputFile) : ExeParser(inputFile), bitness(0), compileTim
   void* virtualpointer = new unsigned char[length];
   file.read((char*)virtualpointer, length);
 
-  auto size1 = sizeof(long);
-  auto size2 = sizeof(unsigned long);
-  auto size3 = sizeof(unsigned short);
-  auto size4 = sizeof(unsigned long long);
-  auto size5 = sizeof(unsigned char);
-
-  auto bitraw = *(unsigned short*)((unsigned char*)virtualpointer + PIMAGE_FOX_DOS_HEADER(virtualpointer)->e_lfanew + sizeof(unsigned long) + sizeof(IMAGE_FOX_FILE_HEADER));
+  auto bitraw = *(uint16_t*)((unsigned char*)virtualpointer + PIMAGE_FOX_DOS_HEADER(virtualpointer)->e_lfanew + sizeof(uint32_t) + sizeof(IMAGE_FOX_FILE_HEADER));
   if (bitraw == 0x10b)
   {
     //IMAGE_NT_OPTIONAL_HDR32_MAGIC

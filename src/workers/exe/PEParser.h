@@ -148,7 +148,7 @@ typedef struct _IMAGE_FOX_DOS_HEADER
   uint16_t   e_oemid;                     // OEM identifier (for e_oeminfo)
   uint16_t   e_oeminfo;                   // OEM information; e_oemid specific
   uint16_t   e_res2[10];                  // Reserved words
-  long   e_lfanew;                    // File address of new exe header
+  int32_t   e_lfanew;                    // File address of new exe header
 } IMAGE_FOX_DOS_HEADER, *PIMAGE_FOX_DOS_HEADER;
 
 typedef struct _IMAGE_FOX_IMPORT_DESCRIPTOR
