@@ -183,11 +183,13 @@ std::string PE32::getCompilationTime()
 
 std::string PE32::getDigitalSignature()
 {
+    std::string to_return;
+
 #ifdef _WIN32
     LONG lStatus;
     DWORD dwLastError;
     std::wstring filename(inputFile.begin(), inputFile.end());
-    std::string to_return;
+    
 
     WINTRUST_FILE_INFO FileData;
     memset(&FileData, 0, sizeof(FileData));
