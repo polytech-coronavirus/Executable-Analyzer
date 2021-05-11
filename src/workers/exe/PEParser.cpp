@@ -7,6 +7,16 @@
 #include <sstream>
 #include <iomanip>
 
+#ifdef _WIN32
+#include <tchar.h>
+#include <windows.h>
+#include <Softpub.h>
+#include <wincrypt.h>
+#include <wintrust.h>
+
+#pragma comment (lib, "wintrust")
+#endif
+
 //virtual address to file address
 unsigned long Rva2Offset_32(unsigned long rva, PIMAGE_FOX_SECTION_HEADER psh, PIMAGE_FOX_NT_HEADERS32 pnt)
 {
@@ -237,7 +247,94 @@ std::string PE32::getCompilationTime()
 
 std::string PE32::getDigitalSignature()
 {
-  return "";
+    std::string to_return;
+
+#ifdef _WIN32
+    LONG lStatus;
+    DWORD dwLastError;
+    std::wstring filename(inputFile.begin(), inputFile.end());
+    
+
+    WINTRUST_FILE_INFO FileData;
+    memset(&FileData, 0, sizeof(FileData));
+    FileData.cbStruct = sizeof(WINTRUST_FILE_INFO);
+    FileData.pcwszFilePath = filename.c_str();
+    FileData.hFile = NULL;
+    FileData.pgKnownSubject = NULL;
+
+    GUID WVTPolicyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
+    WINTRUST_DATA WinTrustData;
+
+    memset(&WinTrustData, 0, sizeof(WinTrustData));
+
+    WinTrustData.cbStruct = sizeof(WinTrustData);
+    WinTrustData.pPolicyCallbackData = NULL;
+    WinTrustData.pSIPClientData = NULL;
+    WinTrustData.dwUIChoice = WTD_UI_NONE;
+    WinTrustData.fdwRevocationChecks = WTD_REVOKE_NONE;
+    WinTrustData.dwUnionChoice = WTD_CHOICE_FILE;
+    WinTrustData.dwStateAction = 0;
+    WinTrustData.hWVTStateData = NULL;
+    WinTrustData.pwszURLReference = NULL;
+    WinTrustData.dwUIContext = 0;
+    WinTrustData.pFile = &FileData;
+
+    lStatus = WinVerifyTrust(
+        NULL,
+        &WVTPolicyGUID,
+        &WinTrustData);
+
+    switch (lStatus)
+    {
+    case ERROR_SUCCESS:
+      
+        to_return += "The file is signed and the signature was verified\n";
+        break;
+
+    case TRUST_E_NOSIGNATURE:
+
+        dwLastError = GetLastError();
+        if (TRUST_E_NOSIGNATURE == dwLastError ||
+            TRUST_E_SUBJECT_FORM_UNKNOWN == dwLastError ||
+            TRUST_E_PROVIDER_UNKNOWN == dwLastError)
+        {
+            to_return += "The file is not signed.\n";
+        }
+        else
+        {
+            to_return += "An unknown error occurred trying to verify the signature of the file.\n";
+        }
+
+        break;
+
+    case TRUST_E_EXPLICIT_DISTRUST:
+
+        to_return += "The signature is present, but specifically disallowed.\n";
+
+        break;
+
+    case TRUST_E_SUBJECT_NOT_TRUSTED:
+
+        to_return += "The signature is present, but not trusted.\n";
+
+        break;
+
+    case CRYPT_E_SECURITY_SETTINGS:
+   
+        to_return += R"(CRYPT_E_SECURITY_SETTINGS - The hash\n 
+            representing the subject or the publisher wasn't\n
+            explicitly trusted by the admin and admin policy\n
+            has disabled user trust. No signature, publisher\n
+            or timestamp errors.\n)";
+
+        break;
+
+    default:
+        to_return += "Unexpexted error is: 0x%x.\n";
+        break;
+    }
+#endif
+  return to_return;
 }
 
 std::string PE32::getBitness()
