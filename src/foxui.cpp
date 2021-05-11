@@ -26,6 +26,7 @@ static void glfw_error_callback(int error, const char* description)
 void Resize(GLFWwindow*, const int width, const int heigth)
 {
   glViewport(0, 0, width, heigth);
+  
 }
 
 FoxUI::FoxUI(unsigned short winW, unsigned short winH):
@@ -283,7 +284,7 @@ void FoxUI::createWindow(const std::string& name)
   {
     throw std::runtime_error("[FoxUI] Could not create window");
   }
-
+  glfwSetWindowSizeLimits(window, 500, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, Resize);
 
