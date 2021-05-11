@@ -112,6 +112,53 @@ void passImportTable64(void* virtualpointer, std::vector<std::string>& importDll
   }
 }
 
+std::uint8_t* PatternScan(void* module, const char* signature)
+{
+  static auto pattern_to_byte = [](const char* pattern) { //was static
+    auto bytes = std::vector<int>{};
+    auto start = const_cast<char*>(pattern);
+    auto end = const_cast<char*>(pattern) + strlen(pattern);
+
+    for (auto current = start; current < end; ++current) {
+      if (*current == '?') {
+        ++current;
+        if (*current == '?')
+          ++current;
+        bytes.push_back(-1);
+      }
+      else {
+        bytes.push_back(strtoul(current, &current, 16));
+      }
+    }
+    return bytes;
+  };
+
+  auto dosHeader = (PIMAGE_FOX_DOS_HEADER)module;
+  auto ntHeaders = (PIMAGE_FOX_NT_HEADERS64)((std::uint8_t*)module + dosHeader->e_lfanew);
+
+  auto sizeOfImage = ntHeaders->OptionalHeader.SizeOfImage;
+  auto patternBytes = pattern_to_byte(signature);
+  auto scanBytes = reinterpret_cast<std::uint8_t*>(module);
+
+  auto s = patternBytes.size();
+  auto d = patternBytes.data();
+
+  for (auto i = 0ul; i < sizeOfImage - s; ++i) {
+    bool found = true;
+    for (auto j = 0ul; j < s; ++j) {
+      if (scanBytes[i + j] != d[j] && d[j] != -1) {
+        found = false;
+        break;
+      }
+    }
+    if (found) {
+      return &scanBytes[i];
+    }
+  }
+  return nullptr;
+}
+
+
 PE32::PE32(std::string inputFile) : ExeParser(inputFile), bitness(0), compileTime(0), hasImportTable(0)
 {
   std::ifstream file(inputFile, std::ios::binary);
@@ -136,7 +183,7 @@ PE32::PE32(std::string inputFile) : ExeParser(inputFile), bitness(0), compileTim
   }
   else
   {
-    throw std::runtime_error("IMAGE_ROM_OPTIONAL_HDR_MAGIC is not supported");
+    throw std::runtime_error("IMAGE_NT_OPTIONAL_ magic number is invalid");
   }
 
   PIMAGE_FOX_NT_HEADERS64 ntheaders64 = (PIMAGE_FOX_NT_HEADERS64)((unsigned char*)(virtualpointer) + PIMAGE_FOX_DOS_HEADER(virtualpointer)->e_lfanew);
@@ -146,29 +193,46 @@ PE32::PE32(std::string inputFile) : ExeParser(inputFile), bitness(0), compileTim
   {
     passImportTable32(virtualpointer, this->importDlls);
     this->compileTime = ntheaders32->FileHeader.TimeDateStamp;
+
+    /*for (unsigned int i = 0; i < ntheaders32->FileHeader.NumberOfSections - 1; i++)
+    {
+      PIMAGE_FOX_SECTION_HEADER pSech32 = (PIMAGE_FOX_SECTION_HEADER)((uint8_t*)ntheaders32 + sizeof(_IMAGE_FOX_NT_HEADERS32) + i * sizeof(IMAGE_FOX_SECTION_HEADER));
+      std::cout << pSech32->Name << "\n";
+    }*/
+
   }
   else
   {
     passImportTable64(virtualpointer, this->importDlls);
     this->compileTime = ntheaders64->FileHeader.TimeDateStamp;
+
+    /*for (unsigned int i = 0; i < ntheaders64->FileHeader.NumberOfSections - 1; i++)
+    {
+      PIMAGE_FOX_SECTION_HEADER pSech64 = (PIMAGE_FOX_SECTION_HEADER)((uint8_t*)ntheaders64 + sizeof(_IMAGE_FOX_NT_HEADERS64) + i * sizeof(IMAGE_FOX_SECTION_HEADER));
+      std::cout << pSech64->Name << "\n";
+    }*/
   }
 
   if (!this->importDlls.empty())
   {
     this->hasImportTable = true;
   }
-
+  
   delete[] virtualpointer;
 }
 
 std::string PE32::getCompilationTime()
 {
-  time_t TimeX = (time_t)compileTime;
-  tm* pGMT = gmtime(&TimeX);
+  if (compileTime != 0)
+  {
+    time_t timet = (time_t)compileTime;
+    tm* pGMT = gmtime(&timet);
 
-  std::stringstream ss;
-  ss << std::put_time(pGMT, "%c");
-  return ss.str();
+    std::stringstream ss;
+    ss << std::put_time(pGMT, "%c");
+    return ss.str();
+  }
+  return "";
 }
 
 std::string PE32::getDigitalSignature()
