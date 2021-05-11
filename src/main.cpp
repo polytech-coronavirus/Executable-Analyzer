@@ -38,7 +38,7 @@ void foxWorker(FoxUI* &interf)
       interf->pushField("Using GPU", parser->isUsingGPU());
     }
 
-    interf->pushField("Alternative data streams", parser->GetADS());
+    interf->pushStream(parser->GetADS());
 
     interf->setState(FoxUI::States::DONE);
   }

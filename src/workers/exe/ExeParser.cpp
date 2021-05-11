@@ -64,44 +64,36 @@ ExeParser::ExeParser(std::string inputFile):
 {}
 
 
-std::string ExeParser::GetADS()
+std::vector<alternateDataStreams_t> ExeParser::GetADS()
 {
-    std::string toReturn;
+  std::vector<alternateDataStreams_t> toReturn;
 
 #ifdef _WIN32
-    int counter = 0;
-    std::wstring filename(inputFile.begin(), inputFile.end());
-    WIN32_FIND_STREAM_DATA fileData, streamData;
-    constexpr DWORD reserved = 0;
-    int couner = 0;
+  int counter = 0;
+  std::wstring filename(inputFile.begin(), inputFile.end());
+  WIN32_FIND_STREAM_DATA fileData, streamData;
+  constexpr DWORD reserved = 0;
+  int couner = 0;
 
-    HANDLE file = FindFirstStreamW(filename.c_str(), FindStreamInfoStandard, &fileData, reserved);
-    if (file == INVALID_HANDLE_VALUE)
-    {
-        return "There are no alternate data streams\n";
-    }
+  HANDLE file = FindFirstStreamW(filename.c_str(), FindStreamInfoStandard, &fileData, reserved);
+  if (file == INVALID_HANDLE_VALUE)
+  {
+    return toReturn;
+  }
 
-    while (FindNextStreamW(file, &streamData))
-    {
-        toReturn += "In file: " + inputFile + '\n';
-        std::wstring name(streamData.cStreamName);
-        std::wstring size(std::to_wstring(streamData.StreamSize.QuadPart));
-
-        std::string streamName(name.begin(), name.end());
-        std::string streamSize(size.begin(), size.end());
-        counter++;
-
-        toReturn += "Stream N" + std::to_string(counter) + '\t' + 
-                    "Stream name: " + streamName + '\t' + 
-                    "Stream size: " + streamSize + '\n';
-    }
-#else
-    toReturn += "There are no alternate data stream on this OS\n";
-
+  while (FindNextStreamW(file, &streamData))
+  {
+    std::wstring name(streamData.cStreamName);
+    std::wstring size(std::to_wstring(streamData.StreamSize.QuadPart));
+    
+    std::string streamName(name.begin(), name.end());
+    std::string streamSize(size.begin(), size.end());
+    counter++;
+    toReturn.push_back({ counter, streamName, streamSize });
+  }
 #endif
 
-    toReturn += '\n';
-    return toReturn;
+  return toReturn;
 }
 
 std::string ExeParser::getCreationTime()

@@ -164,18 +164,52 @@ void FoxUI::runUI()
 
       if (ImGui::BeginTable("fields_fox", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoSavedSettings))
       {
-        /*ImGui::TableSetupColumn("fox1", 0, 50);
-        ImGui::TableSetupColumn("fox2", 0, 300);*/
-        //ImGui::SetColumnWidth(0, 10);
-        //ImGui::SetColumnWidth(1, 50);
         for (auto element : executableFields)
         {
           
           ImGui::TableNextColumn();
           ImGui::TextColored(ImVec4(0.945, 0.490, 0.054, 1.0f), "%s", element.first.c_str());
-
+          
           ImGui::TableNextColumn();
           ImGui::TextColored(ImVec4(1.0, 1.0, 1.0, 1.0), "%s", element.second.c_str());
+        }
+
+        ImGui::TableNextColumn();
+        ImGui::TextColored(ImVec4(0.945, 0.490, 0.054, 1.0f), "Alternate data streams");
+        ImGui::TableNextColumn();
+
+        if (!this->executableStreams.empty())
+        {
+          if (ImGui::BeginTable("fields_fox_streams", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoSavedSettings))
+          {
+            ImGui::TableNextColumn();
+            ImGui::TextColored(ImVec4(0.945, 0.490, 0.054, 1.0f), "N");
+
+            ImGui::TableNextColumn();
+            ImGui::TextColored(ImVec4(0.945, 0.490, 0.054, 1.0f), "Name");
+
+            ImGui::TableNextColumn();
+            ImGui::TextColored(ImVec4(0.945, 0.490, 0.054, 1.0f), "Size");
+
+            for (auto stream : this->executableStreams)
+            {
+              ImGui::TableNextColumn();
+              ImGui::TextColored(ImVec4(0.945, 0.490, 0.054, 1.0f), "%d", stream.streamNumber);
+
+              ImGui::TableNextColumn();
+              ImGui::TextColored(ImVec4(0.945, 0.490, 0.054, 1.0f), "%s", stream.streamName.c_str());
+
+              ImGui::TableNextColumn();
+              ImGui::TextColored(ImVec4(0.945, 0.490, 0.054, 1.0f), "%s", stream.streamSize.c_str());
+            }
+          }
+          ImGui::EndTable();
+        }
+        else
+        {
+          #ifndef _WIN32
+          ImGui::TextColored(ImVec4(1.0, 1.0, 1.0, 1.0), "No alternate streams on this OS");
+          #endif
         }
         ImGui::EndTable();
       }
@@ -241,6 +275,11 @@ void FoxUI::pushField(const std::string& field, const std::string& data )
   executableFields_lock.lock();
   executableFields.push_back(tempPairField);
   executableFields_lock.unlock();
+}
+
+void FoxUI::pushStream(std::vector<alternateDataStreams_t> streams)
+{
+  this->executableStreams = streams;
 }
 
 std::string FoxUI::getFilePath()

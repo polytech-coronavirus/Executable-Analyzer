@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include "../../foxui.h"
 
 class ExeParser
 {
@@ -22,8 +23,7 @@ public:
   virtual std::string getFileType() = 0;
   virtual std::string isUsingGPU() = 0;
 
-
-  std::string GetADS();
+  std::vector<alternateDataStreams_t> GetADS();
   std::string GetSHA256();
   std::string GetSHA512();
   std::string GetMD5();

@@ -91,6 +91,7 @@ void passImportTable64(void* virtualpointer, std::vector<std::string>& importDll
   {
     pImportDescriptor = (PIMAGE_FOX_IMPORT_DESCRIPTOR)((uint64_t)virtualpointer + \
       Rva2Offset_64(ntheaders64->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress, pSech64, ntheaders64));
+
     char* libname[256];
     size_t i = 0;
     // Walk until you reached an empty IMAGE_IMPORT_DESCRIPTOR
@@ -213,7 +214,12 @@ std::string PE32::isUsingGPU()
   {
     "opengl[a-z0-9]*\\.dll",
     "vulkan-[a-z0-9]*\\.dll",
-    "d3d[a-z0-9]*\\.dll"
+    "d3d[a-z0-9]*\\.dll",
+    "glu(32|64)\.dll",
+    "dxgi.dll",
+    "unityplayer.dll",
+    "opencl.dll",
+    "gdiplus.dll"
   };
   
   bool hasMatches = false;

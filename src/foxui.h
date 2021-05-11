@@ -9,6 +9,13 @@ static void glfw_error_callback(int error, const char* description);
 
 struct GLFWwindow;
 
+struct alternateDataStreams_t
+{
+  int streamNumber;
+  std::string streamName;
+  std::string streamSize;
+};
+
 class FoxUI
 {
 public:
@@ -32,6 +39,7 @@ public:
 
   void pushError(std::string what);
   void pushField(const std::string& field, const std::string& data);
+  void pushStream(std::vector<alternateDataStreams_t> streams);
 
   std::string getFilePath();
 private:
@@ -45,6 +53,7 @@ private:
 
   //doesn't need to use map
   std::vector<std::pair<std::string, std::string>> executableFields;
+  std::vector<alternateDataStreams_t> executableStreams;
 
   std::mutex filepath_lock;
   std::mutex executableFields_lock;
