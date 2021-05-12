@@ -36,6 +36,7 @@ void foxWorker(FoxUI* &interf)
       interf->pushField("Compiler", parser->getCompiler());
       interf->pushField("Compile time", parser->getCompilationTime());
       interf->pushField("Using GPU", parser->isUsingGPU());
+      interf->pushField("Digital signature", parser->getDigitalSignature());
     }
 
     interf->pushStream(parser->GetADS());
