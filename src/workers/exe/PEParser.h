@@ -195,7 +195,7 @@ public:
 protected:
   std::string parseCompiler(void* image, unsigned int image_size);
   bool hasSection(std::string str);
-  PIMAGE_FOX_SECTION_HEADER PE32::getSection(std::string str);
+  PIMAGE_FOX_SECTION_HEADER getSection(std::string str);
   uint32_t* getSectionAddress(PIMAGE_FOX_SECTION_HEADER sec);
 
   std::vector<std::string> importDlls;
