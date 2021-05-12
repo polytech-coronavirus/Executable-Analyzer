@@ -143,5 +143,10 @@ private:
   }
   elf_shdr;
   
-  std::string getFromComment();
+  std::string getFromComment(std::ifstream& file);
+  std::string getFPC(std::ifstream& file);
+  std::string getDMD(std::ifstream& file);
+  std::string getTCC(std::ifstream& file);
+  int getSectionIndex(std::string name, std::ifstream& file);
+  std::string readSection(int index, std::ifstream& file);
 };

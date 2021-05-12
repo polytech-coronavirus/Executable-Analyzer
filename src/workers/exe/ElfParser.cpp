@@ -232,58 +232,177 @@ std::string ElfParser::isUsingGPU()
 
 std::string ElfParser::getCompiler()
 {
+  std::ifstream file(inputFile, std::ios::in | std::ios::binary);
+  if (!file.is_open())
+  {
+    throw std::invalid_argument("ELF_PARSER_ERROR: couldn't open file." + inputFile);
+  }
   std::string compiler;
-  if ((compiler = getFromComment()).length() == 0)
+  if ((compiler = getFromComment(file)).length() != 0)
+  {}
+  else if ((compiler = getFPC(file)).length() != 0)
+  {}
+  else if ((compiler = getDMD(file)).length() != 0)
+  {}
+  else if ((compiler = getTCC(file)).length() != 0)
   {}
   return compiler;
 }
 
-std::string ElfParser::getFromComment()
+std::string ElfParser::getFromComment(std::ifstream& file)
 {
+  if (!file.is_open())
+  {
+    return "";
+  }
   std::string version;
+  int index = getSectionIndex(".comment", file);
+  if (index < 0)
+  {
+    return "";
+  }
+  return readSection(index, file);
+}
+
+std::string ElfParser::getFPC(std::ifstream& file)
+{
+  if (!file.is_open())
+  {
+    return "";
+  }
+  int index = getSectionIndex(".data", file);
+  if (index < 0)
+  {
+    return "";
+  }
+  std::string data = readSection(index, file);
+  std::regex r(R"(FPC\ (\d+\.)?(\d+\.)?(\*|\d+))");
+  std::smatch match;
+  if (std::regex_search(data, match, r))
+  {
+    return match.str();
+  }
+  return "";
+}
+
+std::string ElfParser::getDMD(std::ifstream& file)
+{
+  if (!file.is_open())
+  {
+    return "";
+  }
+  int index = getSectionIndex(".dynstr", file);
+  if (index < 0)
+  {
+    return "";
+  }
+  std::string dynstr = readSection(index, file);
+    // Look for the DMD marker
+  if (dynstr.find("__dmd_") != std::string::npos)
+  {
+    return "DMD";
+  }
+  return "";
+}
+
+std::string ElfParser::getTCC(std::ifstream& file)
+{
+  if (getSectionIndex(".note.ABI-tag", file) >= 0) {
+    return "";
+  }
+  if (getSectionIndex(".rodata.cst4", file) < 0) {
+    return "";
+  }
+  return "TCC";
+}
+
+int ElfParser::getSectionIndex(std::string name, std::ifstream& file)
+{
+  if (!file.is_open())
+  {
+    return -2;
+  }
+  int i = 0;
+  std::string currentSection;
+  int nameSize = name.size();
+  currentSection.resize(nameSize);
   if (elf_bitness == ELF32)
   {
-    std::ifstream file(inputFile, std::ios::in | std::ios::binary);
-    if (!file.is_open())
+    Elf32_Shdr& sh_strtab = elf_shdr.elf32[elf_header.elf32.e_shstrndx];
+    for (; i < elf_shdr.elf32.size(); ++i)
     {
-      throw std::invalid_argument("ELF_PARSER_ERROR: couldn't open file." + inputFile);
+      file.seekg(sh_strtab.sh_offset + elf_shdr.elf32[i].sh_name);
+      file.read(&currentSection.front(), nameSize);
+      if (!file.good())
+      {
+        return -3;
+      }
+      if (name == currentSection)
+      {
+        break;
+      }
     }
-    Elf32_Shdr sh_strtab = elf_shdr.elf32[elf_header.elf32.e_shstrndx];
-    auto commentSection = std::find_if(elf_shdr.elf32.begin(), elf_shdr.elf32.end(), [&](Elf32_Shdr& shdr)
+    if (elf_shdr.elf32.size() == i)
     {
-      char comment[8];
-      file.seekg(sh_strtab.sh_offset + shdr.sh_name);
-      file.read(comment, 8);
-      return strncmp(comment, ".comment", 8)==0;
-    });
-    if (commentSection != elf_shdr.elf32.end())
-    {
-      version.resize(commentSection->sh_size);
-      file.seekg(commentSection->sh_offset);
-      file.read(&version.front(), commentSection->sh_size);
+      return -1;
     }
   }
   else
   {
-    std::ifstream file(inputFile, std::ios::in | std::ios::binary);
-    if (!file.is_open())
+    Elf64_Shdr& sh_strtab = elf_shdr.elf64[elf_header.elf64.e_shstrndx];
+    for (; i < elf_shdr.elf64.size(); ++i)
     {
-      throw std::invalid_argument("ELF_PARSER_ERROR: couldn't open file." + inputFile);
+      file.seekg(sh_strtab.sh_offset + elf_shdr.elf64[i].sh_name);
+      file.read(&currentSection.front(), nameSize);
+      if (!file.good())
+      {
+        return -3;
+      }
+      if (name == currentSection)
+      {
+        break;
+      }
     }
-    Elf64_Shdr sh_strtab = elf_shdr.elf64[elf_header.elf64.e_shstrndx];
-    auto commentSection = std::find_if(elf_shdr.elf64.begin(), elf_shdr.elf64.end(), [&](Elf64_Shdr& shdr)
+    if (elf_shdr.elf64.size() == i)
     {
-      char comment[8];
-      file.seekg(sh_strtab.sh_offset + shdr.sh_name);
-      file.read(comment, 8);
-      return strncmp(comment, ".comment", 8)==0;
-    });
-    if (commentSection != elf_shdr.elf64.end())
-    {
-      version.resize(commentSection->sh_size);
-      file.seekg(commentSection->sh_offset);
-      file.read(&version.front(), commentSection->sh_size);
+      return -1;
     }
   }
-  return version;
+  return i;
+}
+
+std::string ElfParser::readSection(int index, std::ifstream& file)
+{
+  if (index < 0 || !file.is_open() || !file.good())
+  {
+    return "";
+  }
+  std::string data;
+  if (elf_bitness == ELF32)
+  {
+    if (index >= elf_shdr.elf32.size())
+    {
+      return "";
+    }
+    Elf32_Shdr& section = elf_shdr.elf32[index];
+    data.resize(section.sh_size);
+    file.seekg(section.sh_offset);
+    file.read(&data.front(), section.sh_size);
+  }
+  else
+  {
+    if (index >= elf_shdr.elf64.size())
+    {
+      return "";
+    }
+    Elf64_Shdr& section = elf_shdr.elf64[index];
+    data.resize(section.sh_size);
+    file.seekg(section.sh_offset);
+    file.read(&data.front(), section.sh_size);
+  }
+  if (!file.good())
+  {
+    return "";
+  }
+  return data;
 }
