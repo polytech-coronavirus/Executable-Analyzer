@@ -193,11 +193,17 @@ public:
   std::string isUsingGPU();
   std::string getCompiler();
 protected:
+  std::string parseCompiler(void* image, unsigned int image_size);
+  bool hasSection(std::string str);
+  PIMAGE_FOX_SECTION_HEADER PE32::getSection(std::string str);
+  uint32_t* getSectionAddress(PIMAGE_FOX_SECTION_HEADER sec);
+
   std::vector<std::string> importDlls;
+  std::vector<PIMAGE_FOX_SECTION_HEADER> sections;
 
   bool hasImportTable;
   unsigned char bitness; //
-  uint32_t compileTime; //timeDataStamp
+  uint32_t compileTime; //timeDataStamp 
 
   std::string compilerName;
 };

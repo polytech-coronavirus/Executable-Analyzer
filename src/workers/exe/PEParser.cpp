@@ -122,7 +122,7 @@ void passImportTable64(void* virtualpointer, std::vector<std::string>& importDll
   }
 }
 
-std::uint8_t* PatternScan(void* module, const char* signature)
+std::uint8_t* PatternScan(void* module, const char* signature, uint32_t size)
 {
   static auto pattern_to_byte = [](const char* pattern) { //was static
     auto bytes = std::vector<int>{};
@@ -143,17 +143,14 @@ std::uint8_t* PatternScan(void* module, const char* signature)
     return bytes;
   };
 
-  auto dosHeader = (PIMAGE_FOX_DOS_HEADER)module;
-  auto ntHeaders = (PIMAGE_FOX_NT_HEADERS64)((std::uint8_t*)module + dosHeader->e_lfanew);
-
-  auto sizeOfImage = ntHeaders->OptionalHeader.SizeOfImage;
+ 
   auto patternBytes = pattern_to_byte(signature);
   auto scanBytes = reinterpret_cast<std::uint8_t*>(module);
 
   auto s = patternBytes.size();
   auto d = patternBytes.data();
 
-  for (auto i = 0ul; i < sizeOfImage - s; ++i) {
+  for (auto i = 0ul; i < size - s; ++i) {
     bool found = true;
     for (auto j = 0ul; j < s; ++j) {
       if (scanBytes[i + j] != d[j] && d[j] != -1) {
@@ -168,6 +165,51 @@ std::uint8_t* PatternScan(void* module, const char* signature)
   return nullptr;
 }
 
+
+std::uint8_t* PatternScan(void* module, const char* signature, uint32_t start, uint32_t end)
+{
+  static auto pattern_to_byte = [](const char* pattern) { //was static
+    auto bytes = std::vector<int>{};
+    auto start = const_cast<char*>(pattern);
+    auto end = const_cast<char*>(pattern) + strlen(pattern);
+
+    for (auto current = start; current < end; ++current) {
+      if (*current == '?') {
+        ++current;
+        if (*current == '?')
+          ++current;
+        bytes.push_back(-1);
+      }
+      else {
+        bytes.push_back(strtoul(current, &current, 16));
+      }
+    }
+    return bytes;
+  };
+
+  auto patternBytes = pattern_to_byte(signature);
+  auto scanBytes = reinterpret_cast<std::uint8_t*>(module);
+
+  auto s = patternBytes.size();
+  auto d = patternBytes.data();
+
+  for (auto i = start; i < end - s; ++i)
+  {
+    bool found = true;
+    for (auto j = 0ul; j < s; ++j) {
+      if (scanBytes[i + j] != d[j] && d[j] != -1)
+      {
+        found = false;
+        break;
+      }
+    }
+    if (found)
+    {
+      return &scanBytes[i];
+    }
+  }
+  return nullptr;
+}
 
 PE32::PE32(std::string inputFile) : ExeParser(inputFile), bitness(0), compileTime(0), hasImportTable(0)
 {
@@ -204,25 +246,29 @@ PE32::PE32(std::string inputFile) : ExeParser(inputFile), bitness(0), compileTim
     passImportTable32(virtualpointer, this->importDlls);
     this->compileTime = ntheaders32->FileHeader.TimeDateStamp;
 
-    /*for (unsigned int i = 0; i < ntheaders32->FileHeader.NumberOfSections - 1; i++)
+    for (unsigned int i = 0; i < ntheaders32->FileHeader.NumberOfSections - 1; i++)
     {
       PIMAGE_FOX_SECTION_HEADER pSech32 = (PIMAGE_FOX_SECTION_HEADER)((uint8_t*)ntheaders32 + sizeof(_IMAGE_FOX_NT_HEADERS32) + i * sizeof(IMAGE_FOX_SECTION_HEADER));
+      sections.push_back(pSech32);
       std::cout << pSech32->Name << "\n";
-    }*/
-
+    }
+    
   }
   else
   {
     passImportTable64(virtualpointer, this->importDlls);
     this->compileTime = ntheaders64->FileHeader.TimeDateStamp;
 
-    /*for (unsigned int i = 0; i < ntheaders64->FileHeader.NumberOfSections - 1; i++)
+    for (unsigned int i = 0; i < ntheaders64->FileHeader.NumberOfSections - 1; i++)
     {
       PIMAGE_FOX_SECTION_HEADER pSech64 = (PIMAGE_FOX_SECTION_HEADER)((uint8_t*)ntheaders64 + sizeof(_IMAGE_FOX_NT_HEADERS64) + i * sizeof(IMAGE_FOX_SECTION_HEADER));
+      sections.push_back(pSech64);
       std::cout << pSech64->Name << "\n";
-    }*/
+    }
+    
   }
 
+  this->compilerName = parseCompiler(virtualpointer, length);
   if (!this->importDlls.empty())
   {
     this->hasImportTable = true;
@@ -376,11 +422,11 @@ std::string PE32::isUsingGPU()
     "opengl[a-z0-9]*\\.dll",
     "vulkan-[a-z0-9]*\\.dll",
     "d3d[a-z0-9]*\\.dll",
-    "glu(32|64)\.dll",
-    "dxgi.dll",
-    "unityplayer.dll",
-    "opencl.dll",
-    "gdiplus.dll"
+    "glu(32|64)\\.dll",
+    "dxgi\\.dll",
+    "unityplayer\\.dll",
+    "opencl\\.dll",
+    "gdiplus\\.dll"
   };
   
   bool hasMatches = false;
@@ -419,5 +465,377 @@ std::string PE32::isUsingGPU()
 
 std::string PE32::getCompiler()
 {
-  return "";
+  return compilerName;
+}
+
+std::string getVSVersionFromLinker(unsigned char linkerMinorVer, unsigned char linkerMajorVer)
+{
+  switch (linkerMajorVer)
+  {
+  case 3:  return "MS C++ " + std::to_string(linkerMinorVer) + "." + std::to_string(linkerMajorVer);   break; // MS C++
+  case 4:  return "Visual studio 4.0";  break;
+  case 5:  return  "Visual studio 5.0";  break;
+  case 6:  return  "Visual studio 6.0";  break;
+  case 7:
+    if (linkerMinorVer < 10)
+    {
+      return "Visual studio 2002";
+    }
+    else
+    {
+      return "Visual studio 2003";
+    }
+    break;
+  case 8:  return "Visual studio 2005"; break;
+  case 9:  return "Visual studio 2008"; break;
+  case 10: return "Visual studio 2010"; break;
+  case 11: return "Visual studio 2012"; break;
+  case 12: return "Visual studio 2013"; break;
+  case 14:
+    switch (linkerMinorVer)
+    {
+    case 0:  return "Visual studio 2015 v.14.0"; break;
+    case 10: return "Visual studio 2017 v.15.0"; break;
+    case 11: return "Visual studio 2017 v.15.3"; break;
+    case 12: return "Visual studio 2017 v.15.5"; break;
+    case 13: return "Visual studio 2017 v.15.6"; break;
+    case 14: return "Visual studio 2017 v.15.7"; break;
+    case 15: return "Visual studio 2017 v.15.8"; break;
+    case 16: return "Visual studio 2017 v.15.9"; break;
+    case 20: return "Visual studio 2019 v.16.0"; break;
+    case 27: return "Visual studio 2019 v.16.7"; break;
+    }
+  }
+  return "Visual Studio";
+}
+
+std::string PE32::parseCompiler(void* image, unsigned int image_size)
+{
+  std::string compiler;
+  unsigned char linkerMajorVer;
+  unsigned char linkerMinorVer;
+
+  PIMAGE_FOX_NT_HEADERS32 ntheaders32 = (PIMAGE_FOX_NT_HEADERS32)((unsigned char*)(image)+PIMAGE_FOX_DOS_HEADER(image)->e_lfanew);
+  PIMAGE_FOX_NT_HEADERS64 ntheaders64 = (PIMAGE_FOX_NT_HEADERS64)((unsigned char*)(image)+PIMAGE_FOX_DOS_HEADER(image)->e_lfanew);
+
+  if (this->bitness == 32)
+  {
+    linkerMajorVer = ntheaders32->OptionalHeader.MajorLinkerVersion;
+    linkerMinorVer = ntheaders32->OptionalHeader.MinorLinkerVersion;
+  }
+  else
+  {
+    linkerMajorVer = ntheaders64->OptionalHeader.MajorLinkerVersion;
+    linkerMinorVer = ntheaders64->OptionalHeader.MinorLinkerVersion;
+  }
+
+  //FASM
+  if (PatternScan(image, "4D 5A 80 00 01 00 00 00 04 00 10 00 FF FF 00 00 40 01 00 00 00 00 00 00 40 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 00 00 00 0E 1F BA 0E 00 B4 09 CD 21 B8 01 4C CD 21", image_size))
+  {
+    return ("FASM" + std::string(" [") + std::to_string(linkerMajorVer) + "." + std::to_string(linkerMinorVer) + "]");
+  }
+
+  bool wasFoundVS = false;
+  std::string vsTempVersion;
+
+  uint8_t* text_addr;
+  auto section_fox = getSection(".text");
+  uint32_t section_size = image_size;
+
+  if (section_fox != nullptr)
+  {
+    section_size = section_fox->SizeOfRawData;
+  }
+  else
+  {
+    text_addr = (uint8_t*)image;
+  }
+
+  if (bitness == 32)
+  {
+    if (section_fox != nullptr)
+    {
+      text_addr = (uint8_t*)(Rva2Offset_32(section_fox->VirtualAddress, section_fox, ntheaders32) + (uint8_t*)image);
+    }
+    
+  }
+  else
+  {
+    if (section_fox != nullptr)
+    {
+      text_addr = (uint8_t*)(Rva2Offset_64(section_fox->VirtualAddress, section_fox, ntheaders64) + (uint8_t*)image);
+    }
+  }
+
+  if (text_addr == 0)
+  {
+    text_addr = (uint8_t*)image;
+  }
+
+  if (PatternScan(text_addr, "55 8B EC 51 C7 45 FC 01 00 00 00 83 7D 0C 00 75 10 83 3D", section_size))
+  {
+    vsTempVersion = "6.0";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "E8 ?? ?? ?? 00 E9 ?? ?? ?? ?? 6A ?? 68 ?? ?? ?? ?? E8", section_size))
+  {
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "55 8B EC 53 8B 5D 08 56 8B 75 0C 57 8B 7D 10 85 F6 75 09 83 3D", section_size))
+  {
+    vsTempVersion = "6.0";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "55 8B EC 6A FF 68 ?? ?? ?? ?? 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 64 89 25 00 00 00 00 83", section_size))
+  {
+    vsTempVersion = "5.0-2003";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "6A 0C 68 ?? ?? ?? ?? E8 ?? ?? ?? ?? 33 C0 40 89 45 E4 8B 75 0C 33 FF 3B F7 75 0C 39 3D", section_size))
+  {
+    vsTempVersion = "2003";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "6A ?? 68 ?? ?? ?? ?? E8 ?? ?? ?? ?? 66 81 3D", section_size))
+  {
+    vsTempVersion = "2003";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "6A ?? 68 ?? ?? ?? ?? E8 ?? ?? ?? ?? BF 94 00 00 00 8B C7 E8", section_size))
+  {
+    vsTempVersion = "2003";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "8B FF 55 8B EC 83 7D 0C 01 75 05 E8", section_size))
+  {
+    vsTempVersion = "2008-2010";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "8B FF 55 8B EC E8 ?? ?? ?? 00 E8 ?? ?? ?? 00 5D C3", section_size))
+  {
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "64 A1 00 00 00 00 55 8B EC 6A FF 68", section_size))
+  {
+    
+    wasFoundVS = true;
+
+  }
+  else if (PatternScan(text_addr, "64 A1 00 00 00 00 50 64 89 25 00 00 00 00 83 C4 A8 53 56 57", section_size))
+  {
+    vsTempVersion = "5.0";
+    wasFoundVS = true;
+
+  }
+  else if (PatternScan(text_addr, "53 56 57 BB ?? ?? ?? ?? 8B ?? ?? ?? 55 3B FB 75", section_size))
+  {
+    vsTempVersion = "2.0";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "56 E8 ?? ?? ?? ?? 8B F0 E8 ?? ?? ?? ?? 68 ?? ?? ?? ?? 68 ?? ?? ?? ?? E8 ?? ?? ?? ?? 6A ?? 68 ?? ?? ?? ?? 56 E8", section_size))
+  {
+    vsTempVersion = "2.0";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "53 B8 ?? ?? ?? ?? 8B ?? ?? ?? 56 57 85 DB 55 75", section_size))
+  {
+    vsTempVersion = "4.2";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "55 8B EC 83 EC 44 56 FF 15 ?? ?? ?? ?? 6A 01 8B F0 FF 15", section_size))
+  {
+    vsTempVersion = "6.0";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "55 8B EC 83 EC 44 56 FF 15 ?? ?? ?? ?? 8B F0 8A 06 3C 22", section_size))
+  {
+    vsTempVersion = "6.0";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "55 8D 6C ?? ?? 81 EC ?? ?? ?? ?? 8B 45 ?? 83 F8 01 56 0F 84 ?? ?? ?? ?? 85 C0 0F 84", section_size))
+  {
+    vsTempVersion = "6.0";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "55 8B EC 53 8B 5D 08 56 8B 75 0C 85 F6 57 8B 7D 10", section_size))
+  {
+    vsTempVersion = "2002";
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "55 8B EC 83 EC 24 53 56 57 89 65 F8", section_size))
+  {
+    wasFoundVS = true;
+  }
+  else if (PatternScan(text_addr, "55 8B EC 83 EC 24 53 56 57 89 65 F8", section_size))
+  {
+    wasFoundVS = true;
+  }
+
+  if (wasFoundVS)
+  {
+    if (vsTempVersion.empty())
+    {
+      return getVSVersionFromLinker(linkerMinorVer, linkerMajorVer);
+    }
+    else
+    {
+      return "Visual Studio " + vsTempVersion;
+    }
+  }
+
+  for (auto dll : this->importDlls)
+  {
+    std::regex msvcpRegex("msvcp[a-z0-9]*\\.dll");
+    if (std::regex_match(dll, msvcpRegex))
+    {
+      std::string vers = getVSVersionFromLinker(linkerMinorVer, linkerMajorVer);
+      if (vers.length() > 14)
+      {
+        return vers;
+      }
+      
+      if (std::regex_match(dll, std::regex("msvcp100[a-z]?\\.dll")))
+      {
+        return "Microsoft Visual Studio 2010";
+      }
+      else if (std::regex_match(dll, std::regex("msvcp110[a-z]?\\.dll")))
+      {
+        return "Microsoft Visual Studio 2012";
+      }
+      else if (std::regex_match(dll, std::regex("msvcp120[a-z]?\\.dll")))
+      {
+        return "Microsoft Visual Studio 2013";
+      }
+      else if (std::regex_match(dll, std::regex("msvcp140[a-z]?\\.dll")))
+      {
+        return "Microsoft Visual Studio 2015-2019";
+      }
+
+    }
+
+  }
+
+  //MINGW
+  if (linkerMajorVer == 2)
+  {
+    bool wasFound = false;
+    //90000300000004000000FFFF0000B800000000000000400000000000000000000000000000000000000000000000000000000000000000000000800000000E1FBA0E00B409CD21B8014CCD21
+    if (PatternScan(image, "90 00 03 00 00 00 04 00 00 00 FF FF 00 00 B8 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 00 00 00 0E 1F BA 0E 00 B4 09 CD 21 B8 01 4C CD 21", image_size))
+    {
+      if (!hasSection(".rsrc"))
+      {
+        compiler += "MinGW";
+        wasFound = true;
+      }
+      else
+      {
+        PIMAGE_FOX_SECTION_HEADER sectionHeader = getSection(".rsrc");
+
+        if (sectionHeader->SizeOfRawData > 512)
+        {
+          if (bitness == 32)
+          {
+            if (!PatternScan((void*)(Rva2Offset_32(sectionHeader->VirtualAddress, sectionHeader, ntheaders32) + (uint8_t*)image + sectionHeader->SizeOfRawData - 512) , "4D 69 63 72 6F 73 6F 66 74 20 43 6F 72 70 2E", 512))
+            {
+              compiler += "MinGW";
+              wasFound = true;
+            }
+          }
+          else
+          {
+            if (!PatternScan((void*)(Rva2Offset_64(sectionHeader->VirtualAddress, sectionHeader, ntheaders64) + (uint8_t*)image + sectionHeader->SizeOfRawData - 512), "4D 69 63 72 6F 73 6F 66 74 20 43 6F 72 70 2E", 512))
+            {
+              compiler += "MinGW";
+              wasFound = true;
+            }
+          }
+        }
+
+      }
+    }
+    
+    if (wasFound)
+    {
+      auto sec = getSection(".rdata");
+      if (sec != nullptr)
+      {
+        uint8_t* foxversOffset;
+        if (bitness == 32)
+        {
+          foxversOffset = PatternScan((void*)(Rva2Offset_32(sec->VirtualAddress, sec, ntheaders32) + (uint8_t*)image), "47 43 43 3A 20", sec->SizeOfRawData);
+        }
+        else
+        {
+          foxversOffset = PatternScan((void*)(Rva2Offset_64(sec->VirtualAddress, sec, ntheaders64) + (uint8_t*)image), "47 43 43 3A 20", sec->SizeOfRawData);
+        }
+
+        if (foxversOffset != nullptr)
+        {
+          char version_temp[256];
+          strcpy(version_temp, (const char*)(foxversOffset));
+
+          compiler += " [";
+          compiler += version_temp;
+          compiler += "]";
+        }
+
+      }
+    }
+  }
+
+  if (PatternScan(image, "55 89 E5 83 EC 08 C7 04 24 ?? 00 00 00 FF 15 ?? ?? ?? ?? E8 ?? ?? FF FF ?? ?? ?? ?? ?? ?? ?? ?? 55", image_size))
+  {
+    return "MinGW GCC 3.x";
+  }
+  else if (PatternScan(image, "55 89 E5 E8 02 00 00 00 C9 C3 90 90 45 58 45 E9", image_size))
+  {
+    return "MinGW GCC 2.x";
+  }
+  else if (PatternScan(image, "55 89 E5 E8 02 00 00 00 C9 C3 90 90 45 58 45", image_size))
+  {
+    return "MinGW GCC 2.x";
+  }
+  //A1........C1E002A3
+  //
+  if (image_size > 310)
+  {
+    if (PatternScan(image, "4D 5A 50 00 02 00 00 00 04 00 0F 00 FF FF 00 00 B8 00 00 00 00 00 00 00 40 00 1A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 BA 10 00 0E 1F B4 09 CD 21 B8 01 4C CD 21 90 90 54 68 69 73 20 70 72 6F 67 72 61 6D 20 6D 75 73 74 20 62 65 20 72 75 6E 20 75 6E 64 65 72 20 57 69 6E 33 32 0D 0A 24 37 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 45 00 00", image_size))
+    {
+      return "Borland C/C++";
+    }
+  }
+  if (PatternScan(image, "A1 ?? ?? ?? ?? C1 E0 02 A3", image_size))
+  {
+    return "Borland C/C++";
+  }
+
+  return compiler;
+}
+
+bool PE32::hasSection(std::string str)
+{
+  return (std::find_if(this->sections.begin(), this->sections.end(), [&](PIMAGE_FOX_SECTION_HEADER& sec)
+    {
+      return str.compare((char*)sec->Name) == 0;
+    }) != this->sections.end());
+}
+
+PIMAGE_FOX_SECTION_HEADER PE32::getSection(std::string str)
+{
+  auto it = (std::find_if(this->sections.begin(), this->sections.end(), [&](PIMAGE_FOX_SECTION_HEADER& sec)
+    {
+      return str.compare((char*)sec->Name) == 0;
+    }));
+
+  if (it == this->sections.end())
+  {
+    return nullptr;
+  }
+  return *it;
+}
+
+uint32_t* PE32::getSectionAddress(PIMAGE_FOX_SECTION_HEADER sec)
+{
+
+  return 0;
 }
