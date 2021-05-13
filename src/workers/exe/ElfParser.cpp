@@ -135,6 +135,20 @@ ElfParser::ElfParser(std::string inputFile):
         swap_endian(shdr.sh_entsize);
       }
     }
+    int index = getSectionIndex(".dynamic", file);
+    if (index >= 0)
+    {
+      Elf32_Shdr& dynamicSection = elf_shdr.elf32[index];
+      file.seekg(dynamicSection.sh_offset);
+      
+      Elf32_Dyn dyn;
+      do
+      {
+        file.read((char*)(&dyn), sizeof(Elf32_Dyn));
+        elf_dyn.elf32.push_back(dyn);
+      }
+      while (dyn.d_tag != 0);
+    }
   }
   else
   {
@@ -201,18 +215,32 @@ ElfParser::ElfParser(std::string inputFile):
         swap_endian(shdr.sh_entsize);
       }
     }
+    int index = getSectionIndex(".dynamic", file);
+    if (index >= 0)
+    {
+      Elf64_Shdr& dynamicSection = elf_shdr.elf64[index];
+      file.seekg(dynamicSection.sh_offset);
+      
+      Elf64_Dyn dyn;
+      do
+      {
+        file.read((char*)(&dyn), sizeof(Elf64_Dyn));
+        elf_dyn.elf64.push_back(dyn);
+      }
+      while (dyn.d_tag != 0);
+    }
   }
   file.close();
 }
 
 std::string ElfParser::getCompilationTime()
 {
-  return "";
+  return "---";
 }
 
 std::string ElfParser::getDigitalSignature()
 {
-  return "";
+  return "---";
 }
 
 std::string ElfParser::getBitness()
@@ -227,7 +255,84 @@ std::string ElfParser::getFileType()
 
 std::string ElfParser::isUsingGPU()
 {
-  return "TODO";
+  const std::vector <std::string>gpuLibs =
+  {
+    "opengl[a-z0-9]*\\.so\\.[a-z0-9]*",
+    "vulkan-[a-z0-9]*\\.so\\.[a-z0-9]*",
+    "d3d[a-z0-9]*\\.so\\.[a-z0-9]*",
+    "glu(32|64)\\.so\\.[a-z0-9]*",
+    "dxgi\\.so\\.[a-z0-9]*",
+    "unityplayer\\.so\\.[a-z0-9]*",
+    "opencl\\.so\\.[a-z0-9]*",
+    "gdiplus\\.so\\.[a-z0-9]*",
+    "gdi32\\.so\\.[a-z0-9]*"
+  };
+  std::string gpuDLLs = "YES [";
+  std::ifstream file(inputFile, std::ios::in | std::ios::binary);
+  if (!file.is_open())
+  {
+    throw std::runtime_error("ELF_PARSER_ERROR: couldn't open file." + inputFile);
+  }
+  int64_t index = getSectionIndex(".dynstr", file);
+  if (index < 0)
+  {
+    return "NO";
+  }
+  if (elf_bitness == ELF32)
+  {
+    Elf32_Shdr& dynstr = elf_shdr.elf32[index];
+    std::string currentDLL;
+    for (Elf32_Dyn& dyn: elf_dyn.elf32)
+    {
+      if (dyn.d_tag == 1)
+      {
+        file.seekg(dynstr.sh_offset + dyn.d_un.d_val);
+        getline(file, currentDLL, '\0');
+        std::transform(currentDLL.begin(), currentDLL.end(), currentDLL.begin(),
+          [](unsigned char c) { return std::tolower(c); });
+        for (auto importRegex : gpuLibs)
+        {
+          std::regex regex(importRegex);
+          if (std::regex_match(currentDLL, regex))
+          {
+            gpuDLLs += currentDLL + ", ";
+            break;
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+    Elf64_Shdr& dynstr = elf_shdr.elf64[index];
+    std::string currentDLL;
+    for (Elf64_Dyn& dyn: elf_dyn.elf64)
+    {
+      if (dyn.d_tag == 1)
+      {
+        file.seekg(dynstr.sh_offset + dyn.d_un.d_val);
+        getline(file, currentDLL, '\0');
+        std::transform(currentDLL.begin(), currentDLL.end(), currentDLL.begin(),
+          [](unsigned char c) { return std::tolower(c); });
+        for (auto importRegex : gpuLibs)
+        {
+          std::regex regex(importRegex);
+          if (std::regex_match(currentDLL, regex))
+          {
+            gpuDLLs += currentDLL + ", ";
+            break;
+          }
+        }
+      }
+    }
+  }
+  if (gpuDLLs.size() == 5)
+  {
+    return "NO";
+  }
+  gpuDLLs.pop_back();
+  gpuDLLs.back() = ']';
+  return gpuDLLs;
 }
 
 std::string ElfParser::getCompiler()
@@ -316,13 +421,13 @@ std::string ElfParser::getTCC(std::ifstream& file)
   return "TCC";
 }
 
-int ElfParser::getSectionIndex(std::string name, std::ifstream& file)
+int64_t ElfParser::getSectionIndex(std::string name, std::ifstream& file)
 {
   if (!file.is_open())
   {
     return -2;
   }
-  int i = 0;
+  int64_t i = 0;
   std::string currentSection;
   int nameSize = name.size();
   currentSection.resize(nameSize);
