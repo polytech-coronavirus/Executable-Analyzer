@@ -87,6 +87,12 @@ std::vector<alternateDataStreams_t> ExeParser::GetADS()
     std::wstring size(std::to_wstring(streamData.StreamSize.QuadPart));
     
     std::string streamName(name.begin(), name.end());
+
+    if (!streamName.empty())
+    {
+      streamName = streamName.substr(1, streamName.find(":", 1) - 1);
+    }
+
     std::string streamSize(size.begin(), size.end());
     counter++;
     toReturn.push_back({ counter, streamName, streamSize });
