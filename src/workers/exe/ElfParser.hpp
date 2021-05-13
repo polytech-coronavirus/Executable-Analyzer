@@ -95,6 +95,27 @@ struct Elf64_Shdr
   uint64_t   sh_entsize;
 };
 
+struct Elf32_Dyn
+{
+  int32_t    d_tag;
+  union
+  {
+    uint32_t d_val;
+    uint32_t d_ptr;
+  }
+  d_un;
+};
+
+struct Elf64_Dyn
+{
+  int64_t    d_tag;
+  union
+  {
+    uint64_t d_val;
+    uint64_t  d_ptr;
+  }
+  d_un;
+};
 class ElfParser: public ExeParser
 {
 public:
@@ -142,11 +163,16 @@ private:
     std::vector<Elf64_Shdr> elf64;
   }
   elf_shdr;
-  
+  struct
+  {
+    std::vector<Elf32_Dyn> elf32;
+    std::vector<Elf64_Dyn> elf64;
+  }
+  elf_dyn;
   std::string getFromComment(std::ifstream& file);
   std::string getFPC(std::ifstream& file);
   std::string getDMD(std::ifstream& file);
   std::string getTCC(std::ifstream& file);
-  int getSectionIndex(std::string name, std::ifstream& file);
+  int64_t getSectionIndex(std::string name, std::ifstream& file);
   std::string readSection(int index, std::ifstream& file);
 };
