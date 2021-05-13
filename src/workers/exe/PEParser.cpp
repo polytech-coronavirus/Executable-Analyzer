@@ -387,11 +387,11 @@ std::string PE32::getBitness()
 {
   if (bitness == 32)
   {
-    return "x86";
+    return "32";
   }
   else if (bitness == 64)
   {
-    return "x64";
+    return "64";
   }
   else
   {
