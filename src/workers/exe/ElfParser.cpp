@@ -168,8 +168,7 @@ ElfParser::ElfParser(std::string inputFile):
       swap_endian(elf_header.elf64.e_shnum);
       swap_endian(elf_header.elf64.e_shstrndx);
     }
-    if (elf_header.elf64.e_type != 2 //executable
-        || elf_header.elf64.e_version != 1) //always 1
+    if (elf_header.elf64.e_version != 1) //always 1
     {
       throw std::runtime_error("ELF_PARSER_ERROR: file isn't ELF executable");
     }
