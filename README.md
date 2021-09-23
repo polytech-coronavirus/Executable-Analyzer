@@ -29,6 +29,7 @@
 1. ```git remote add upstream git@github.com:polytech-coronavirus/Executable-Analyzer.git``` (добавляем один раз, в следующие разы начинаем с пункта 2) 
 2. ```git fetch upstream```
 3. ```git pull upstream main```
+
 ## Сборка Windows->Windows
 
 1. Устанавливаем [cmake](https://cmake.org/download/) (Windows x64 Installer)
@@ -40,16 +41,13 @@
 Либо ```buildrun_windows_windows.bat```, тогда следующий пункт пропускаем.
 5. Идем в папку build/Debug/ и стартуем наше приложение.
 
-## Сборка Windows->Linux
-
-```пусто```
-
 ## Сборка Linux->Linux
 
 1. Идем в папку ```scripts```
 2. Запускаем ```./configure_linux_linux.sh```
 3. ```./build_linux_linux.sh``` для сборки проекта (исполняемый файл в папке build)
 
-## Сборка Linux->Windows
-
-```не поддерживается```
+## Сборка Mac->Mac
+1. Идем в папку ```scripts```
+2. Запускаем ```./configure_mac_mac.sh```
+3. ```./build_unix_unix.sh``` для сборки проекта (исполняемый файл в папке build)
