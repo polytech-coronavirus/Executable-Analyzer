@@ -102,7 +102,8 @@ void FoxUI::runUI()
 {
   static imgui_addons::ImGuiFileBrowser file_test;
   static std::string selected_file;
-  static bool file_dialog_open = true;
+  static bool file_dialog_open, load_cached_history = true;
+  static std::vector<std::string> cachedHistoryCopy;
 
   newFrame();
 
@@ -115,21 +116,59 @@ void FoxUI::runUI()
   ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
   if (ImGui::Begin("Exec", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
   {
-    auto current_state = getState(); //thread safe fox shit
+    auto current_state = getState();
     switch (current_state)
     {
     case States::WAITING_FILE_PATH:
       //only once popup
+      if (load_cached_history)
+      {
+        cachedHistoryCopy = historyManager.getHistory();
+        load_cached_history = false;
+      }
+
       if (file_dialog_open)
       {
         ImGui::OpenPopup("Open File");
         file_dialog_open = false;
       }
+
+      if (ImGui::Button("Select path"))
+      {
+        file_dialog_open = true;
+      }
+
+      if (ImGui::BeginListBox("History"))
+      {
+        static int item_current_idx = 0;
+        for (unsigned int i = 0; i < cachedHistoryCopy.size(); i++)
+        {
+          const bool is_selected = (item_current_idx == i);
+          if (ImGui::Selectable(cachedHistoryCopy[i].c_str(), is_selected))
+          {
+
+            item_current_idx = i;
+            selected_file = cachedHistoryCopy[i];
+            //write selected file
+            filepath_lock.lock();
+            this->filepath = selected_file;
+            filepath_lock.unlock();
+
+            //set state to "waiting analyze button"
+            renderState_lock.lock();
+            this->renderState = States::WAITING_ANALYZE_BUTTON; //next state after file path wait
+            renderState_lock.unlock();
+          }
+          if (is_selected)
+            ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndListBox();
+      }
       ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
       if (file_test.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(windowWidth, windowHeight), ".exe,.out"))
       {
         selected_file = file_test.selected_path;
-
+        
         //for main fox thread
 
         //write selected file
