@@ -28,14 +28,17 @@ FoxHistoryManager::~FoxHistoryManager()
   //clear history file on disk to rewrite
   if (historyFile.is_open())
   {
-    std::experimental::filesystem::resize_file(historyPath, 0);
-    historyFile.seekp(0);
+    historyFile.close();
+    historyFile.open(historyPath, std::ios::out | std::ios::trunc);
   }
   else
   {
     throw std::runtime_error("History file not opened");
   }
-
+  if (!historyFile.is_open())
+  {
+    throw std::runtime_error("Could not open history file for writing cache");
+  }
   for (auto tempHistoryEntry : cachedHistory)
   {
     historyFile << tempHistoryEntry << std::endl;
