@@ -4,6 +4,7 @@
 #include <mutex>
 #include <vector>
 #include <utility>
+#include "HistoryManager.h"
 
 static void glfw_error_callback(int error, const char* description);
 
@@ -42,6 +43,8 @@ public:
   void pushStream(std::vector<alternateDataStreams_t> streams);
 
   std::string getFilePath();
+
+  FoxHistoryManager historyManager;
 private:
   void createWindow(const std::string& name);
   void newFrame();
