@@ -9,12 +9,13 @@ public:
   FoxHistoryManager();
   ~FoxHistoryManager();
 
-  std::vector<std::string> getHistory();
+  const std::vector<std::string> getHistory();
   void pushHistoryString(std::string pathToSave);
   void clearHistory();
-  unsigned int getHistorySize();
+  const unsigned int getHistorySize();
+  const std::string getHistoryPath();
 private:
-  std::string historyPath = "analyzeHistory.txt";
+  const std::string historyPath = "analyzeHistory.txt";
   std::fstream historyFile;
   std::vector<std::string> cachedHistory;
 };

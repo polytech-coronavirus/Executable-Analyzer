@@ -102,7 +102,7 @@ void FoxUI::runUI()
 {
   static imgui_addons::ImGuiFileBrowser file_test;
   static std::string selected_file;
-  static bool file_dialog_open, load_cached_history = true;
+  static bool file_dialog_open = false, load_cached_history = true;
   static std::vector<std::string> cachedHistoryCopy;
 
   newFrame();
@@ -146,7 +146,6 @@ void FoxUI::runUI()
           const bool is_selected = (item_current_idx == i);
           if (ImGui::Selectable(cachedHistoryCopy[i].c_str(), is_selected))
           {
-
             item_current_idx = i;
             selected_file = cachedHistoryCopy[i];
             //write selected file
@@ -160,7 +159,9 @@ void FoxUI::runUI()
             renderState_lock.unlock();
           }
           if (is_selected)
+          {
             ImGui::SetItemDefaultFocus();
+          }
         }
         ImGui::EndListBox();
       }
@@ -252,8 +253,7 @@ void FoxUI::runUI()
         }
         ImGui::EndTable();
       }
-      
-      
+
       executableFields_lock.unlock();
       break;
 

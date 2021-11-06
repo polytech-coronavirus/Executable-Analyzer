@@ -10,10 +10,9 @@ FoxHistoryManager::FoxHistoryManager()
 
   if (!historyFile.is_open())
   {
-    throw std::runtime_error("Could not create or open history file");
+    return;
   }
   
-
   while (std::getline(historyFile, tempLine))
   {
     cachedHistory.push_back(tempLine);
@@ -33,11 +32,11 @@ FoxHistoryManager::~FoxHistoryManager()
   }
   else
   {
-    throw std::runtime_error("History file not opened");
+    return;
   }
   if (!historyFile.is_open())
   {
-    throw std::runtime_error("Could not open history file for writing cache");
+    return;
   }
   for (auto tempHistoryEntry : cachedHistory)
   {
@@ -45,7 +44,7 @@ FoxHistoryManager::~FoxHistoryManager()
   }
 }
 
-std::vector<std::string> FoxHistoryManager::getHistory()
+const std::vector<std::string> FoxHistoryManager::getHistory()
 {
   return cachedHistory;
 }
@@ -61,7 +60,12 @@ void FoxHistoryManager::clearHistory()
   cachedHistory.clear();
 }
 
-unsigned int FoxHistoryManager::getHistorySize()
+const unsigned int FoxHistoryManager::getHistorySize()
 {
   return cachedHistory.size();
+}
+
+const std::string FoxHistoryManager::getHistoryPath()
+{
+  return historyPath;
 }
