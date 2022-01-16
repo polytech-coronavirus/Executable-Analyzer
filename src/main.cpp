@@ -41,6 +41,7 @@ void foxWorker(FoxUI* &interf)
 
     interf->pushStream(parser->GetADS());
 
+    interf->historyManager.pushHistoryString(filePath);
     interf->setState(FoxUI::States::DONE);
   }
   catch (std::exception& error)
@@ -63,5 +64,7 @@ int main(int, char**)
     interf->runUI();
   }
  
+  delete interf;
+
   return 0;
 }
