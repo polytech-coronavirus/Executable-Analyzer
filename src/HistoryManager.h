@@ -1,4 +1,6 @@
-#pragma once
+#ifndef HISTORY_MANAGER_H
+#define HISTORY_MANAGER_H
+
 #include <string>
 #include <vector>
 #include <fstream>
@@ -19,3 +21,4 @@ private:
   std::fstream historyFile;
   std::vector<std::string> cachedHistory;
 };
+#endif

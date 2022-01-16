@@ -129,14 +129,19 @@ std::uint8_t* PatternScan(void* module, const char* signature, uint32_t size)
     auto start = const_cast<char*>(pattern);
     auto end = const_cast<char*>(pattern) + strlen(pattern);
 
-    for (auto current = start; current < end; ++current) {
-      if (*current == '?') {
+    for (auto current = start; current < end; ++current)
+    {
+      if (*current == '?')
+      {
         ++current;
         if (*current == '?')
+        {
           ++current;
+        }
         bytes.push_back(-1);
       }
-      else {
+      else
+      {
         bytes.push_back(strtoul(current, &current, 16));
       }
     }
@@ -150,15 +155,19 @@ std::uint8_t* PatternScan(void* module, const char* signature, uint32_t size)
   auto s = patternBytes.size();
   auto d = patternBytes.data();
 
-  for (auto i = 0ul; i < size - s; ++i) {
+  for (auto i = 0ul; i < size - s; ++i)
+  {
     bool found = true;
-    for (auto j = 0ul; j < s; ++j) {
-      if (scanBytes[i + j] != d[j] && d[j] != -1) {
+    for (auto j = 0ul; j < s; ++j)
+    {
+      if (scanBytes[i + j] != d[j] && d[j] != -1)
+      {
         found = false;
         break;
       }
     }
-    if (found) {
+    if (found)
+    {
       return &scanBytes[i];
     }
   }
@@ -168,19 +177,25 @@ std::uint8_t* PatternScan(void* module, const char* signature, uint32_t size)
 
 std::uint8_t* PatternScan(void* module, const char* signature, uint32_t start, uint32_t end)
 {
-  static auto pattern_to_byte = [](const char* pattern) { //was static
+  static auto pattern_to_byte = [](const char* pattern) //was static
+  {
     auto bytes = std::vector<int>{};
     auto start = const_cast<char*>(pattern);
     auto end = const_cast<char*>(pattern) + strlen(pattern);
 
-    for (auto current = start; current < end; ++current) {
-      if (*current == '?') {
+    for (auto current = start; current < end; ++current)
+    {
+      if (*current == '?')
+      {
         ++current;
         if (*current == '?')
+        {
           ++current;
+        }
         bytes.push_back(-1);
       }
-      else {
+      else
+      {
         bytes.push_back(strtoul(current, &current, 16));
       }
     }
@@ -196,7 +211,8 @@ std::uint8_t* PatternScan(void* module, const char* signature, uint32_t start, u
   for (auto i = start; i < end - s; ++i)
   {
     bool found = true;
-    for (auto j = 0ul; j < s; ++j) {
+    for (auto j = 0ul; j < s; ++j)
+    {
       if (scanBytes[i + j] != d[j] && d[j] != -1)
       {
         found = false;
@@ -367,7 +383,7 @@ std::string PE32::getDigitalSignature()
 
     case CRYPT_E_SECURITY_SETTINGS:
    
-        to_return += R"(CRYPT_E_SECURITY_SETTINGS - The hash\n 
+        to_return += R"(CRYPT_E_SECURITY_SETTINGS - The hash\n
             representing the subject or the publisher wasn't\n
             explicitly trusted by the admin and admin policy\n
             has disabled user trust. No signature, publisher\n
@@ -461,7 +477,6 @@ std::string PE32::isUsingGPU()
   }
 
   return "No";
-   
 }
 
 std::string PE32::getCompiler()
@@ -720,7 +735,6 @@ std::string PE32::parseCompiler(void* image, unsigned int image_size)
   if (linkerMajorVer == 2)
   {
     bool wasFound = false;
-    //90000300000004000000FFFF0000B800000000000000400000000000000000000000000000000000000000000000000000000000000000000000800000000E1FBA0E00B409CD21B8014CCD21
     if (PatternScan(image, "90 00 03 00 00 00 04 00 00 00 FF FF 00 00 B8 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 00 00 00 0E 1F BA 0E 00 B4 09 CD 21 B8 01 4C CD 21", image_size))
     {
       if (!hasSection(".rsrc"))
