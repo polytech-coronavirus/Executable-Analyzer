@@ -1,8 +1,9 @@
-#pragma once
+#ifndef PEPARSER_H
+#define PEPARSER_H
+
 #include "ExeParser.hpp"
 #include <string>
 #include <cstdint>
-
 #define IMAGE_DIRECTORY_ENTRY_IMPORT 1
 #define IMAGE_SIZEOF_SHORT_NAME 8
 typedef struct _IMAGE_FOX_SECTION_HEADER
@@ -203,7 +204,8 @@ protected:
 
   bool hasImportTable;
   unsigned char bitness; //
-  uint32_t compileTime; //timeDataStamp 
+  uint32_t compileTime; //timeDataStamp
 
   std::string compilerName;
 };
+#endif

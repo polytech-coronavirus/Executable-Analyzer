@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ELFPARSER_H
+#define ELFPARSER_H
+
 
 #include <string>
 #include <fstream>
@@ -176,3 +178,4 @@ private:
   int64_t getSectionIndex(std::string name, std::ifstream& file);
   std::string readSection(int index, std::ifstream& file);
 };
+#endif

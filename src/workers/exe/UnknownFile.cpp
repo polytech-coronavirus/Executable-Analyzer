@@ -32,5 +32,5 @@ std::string UnknownFile::isUsingGPU()
 
 std::string UnknownFile::getCompiler()
 {
-  return std::string();
+  return "";
 }

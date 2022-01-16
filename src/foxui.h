@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FOXUI_H
+#define FOXUI_H
 
 #include <string>
 #include <mutex>
@@ -67,3 +68,4 @@ private:
 
   GLFWwindow* window;
 };
+#endif

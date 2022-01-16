@@ -1,4 +1,6 @@
-#pragma once
+#ifndef EXEPARSER_H
+#define EXEPARSER_H
+
 #include <string>
 #include <fstream>
 #include <vector>
@@ -33,3 +35,4 @@ protected:
 };
 
 ExeParser* getParser(const std::string& filename);
+#endif

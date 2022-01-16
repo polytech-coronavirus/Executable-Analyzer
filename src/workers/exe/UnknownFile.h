@@ -1,4 +1,6 @@
-#pragma once
+#ifndef UNKNOWNFILE_H
+#define UNKNOWNFILE_H
+
 #include "ExeParser.hpp"
 
 class UnknownFile : public ExeParser
@@ -15,3 +17,4 @@ public:
   std::string getCompiler();
 
 };
+#endif
